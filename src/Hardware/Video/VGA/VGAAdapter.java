@@ -1390,10 +1390,10 @@ public abstract class VGAAdapter extends GraphicsCard
                     p3 = m_vram.getData(addr + 3);
                 }
                 
-                int pixel = (m_pixelLUT[p0][px & 7][0] |
-                             m_pixelLUT[p1][px & 7][1] |
-                             m_pixelLUT[p2][px & 7][2] |
-                             m_pixelLUT[p3][px & 7][3]) & enableMask;
+                int pixel = (m_pixelLUT[p0][px][0] |
+                             m_pixelLUT[p1][px][1] |
+                             m_pixelLUT[p2][px][2] |
+                             m_pixelLUT[p3][px][3]) & enableMask;
                 
                 m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[pixel]];
             }
@@ -1450,10 +1450,10 @@ public abstract class VGAAdapter extends GraphicsCard
                     p3 = m_vram.getData(addr + 3);
                 }
                 
-                int pixel = (m_pixelLUT[p0][px & 7][0] |
-                             m_pixelLUT[p1][px & 7][1] |
-                             m_pixelLUT[p2][px & 7][2] |
-                             m_pixelLUT[p3][px & 7][3]) & enableMask;
+                int pixel = (m_pixelLUT[p0][px][0] |
+                             m_pixelLUT[p1][px][1] |
+                             m_pixelLUT[p2][px][2] |
+                             m_pixelLUT[p3][px][3]) & enableMask;
                 
                 m_frameData[offset] = m_dacPaletteCache[m_atcPaletteCache[pixel]];
             }
