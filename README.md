@@ -58,6 +58,8 @@
   - The special registers and behaviors of the Tseng ET4000 graphics card aren't implemented at all at the moment. The only thing that is (partially) implemented is the VGA standard.
   - There is no FDC or IDE emulation at the moment. Floppy and hard drives get emulated through hooking of interrupt 13h. Software, that requires access to the FDC or IDE i/o-ports, will not function correctly (or even at all).
   - CLI and STI opcodes aren't implemented properly.
+  - I'm not entirely sure if the shift and rotate opcodes are implemented correctly for the 8086. I took the code for these opcodes from
+    my 80386 emulator. The 8086 handles these opcodes slightly different than a 80386 and I have no real hardware to test this atm.
   
 Have fun.
 
