@@ -41,15 +41,17 @@
  - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some old classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill, ...
  
 ### Prerequisites
+As I have no interest in getting into any kind of copyright related issues, you have to provide the following ROM files yourself.
  - This project requires the Tseng ET4000 BIOS ROM<br />
    (Required file: [et4000.bin])
+ - This project requires the modified "Super PC/Turbo XT BIOS 3.0". The original IBM XT BIOS will not work on this emulator.<br />
+   (Required file: [pcxtbios.bin])
  - The IBM Basic C1.10 ROM however is optional<br />
    (Optional file: [basicc11.bin])
    
 ### Starting
  - Compile the project
- - Place et4000.bin (and optionally basicc11.bin) in the same directory as jPC.jar<br />
-   (or put them in the respective folders at src/Hardware/ROM/ before you compile the project)
+ - Place et4000.bin and pcxtbios.bin (and optionally basicc11.bin) in the same directory as jPC.jar or put them in the respective folders at src/Hardware/ROM/ before you compile the project.
  
 ### Useful Tools
  - [WinImage], for manipulating floppy- and hard disk images.
@@ -69,3 +71,4 @@ Have fun.
 [WinImage]:http://www.winimage.com/download.htm
 [et4000.bin]:https://www.google.com/?#q=%22et4000.bin%22!+file
 [basicc11.bin]:https://www.google.com/?#q=%22basicc11.bin%22!+file
+[pcxtbios.bin]:http://www.phatcode.net/downloads.php?id=101
