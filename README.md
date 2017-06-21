@@ -38,7 +38,7 @@
 </p>
 
 ### Example Drive Image
- - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some old classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill, ...
+ - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some shareware classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill, ...
  
 ### Prerequisites
 As I have no interest in getting into any kind of copyright related issues, you have to provide the following ROM files yourself.
