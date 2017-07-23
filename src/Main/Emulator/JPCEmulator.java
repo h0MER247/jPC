@@ -315,5 +315,10 @@ public final class JPCEmulator {
         return m_drives.isIndicatorLit();
     }
     
+    public void releaseAllKeys() {
+        
+        m_keyboard.releaseAllKeys();
+    }
+    
     // </editor-fold>
 }

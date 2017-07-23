@@ -31,6 +31,8 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -88,6 +90,14 @@ public final class JPCWindow extends JFrame {
             public void windowClosing(WindowEvent e) {
                 
                 onExit();
+            }
+        });
+        addFocusListener(new FocusAdapter() {
+            
+            @Override
+            public void focusLost(FocusEvent fe) {
+                
+                m_emulator.releaseAllKeys();
             }
         });
         

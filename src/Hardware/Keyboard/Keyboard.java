@@ -182,6 +182,12 @@ public final class Keyboard implements HardwareComponent,
         }
     }
     
+    public void releaseAllKeys() {
+        
+        m_keys.forEach(key -> m_fifo.add(key.getBreakCode()));
+        m_keys.clear();
+    }
+    
     public void pressCtrlAltDelete() {
         
         pressKey(KeyXT.KEY_CTRL);
