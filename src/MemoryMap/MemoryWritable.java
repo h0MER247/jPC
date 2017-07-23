@@ -25,4 +25,6 @@ public interface MemoryWritable extends MemoryMapped {
     
     void writeMEM8(int address, int data);
     void writeMEM16(int address, int data);
+    
+    default void writeMEM32(int address, int data) { throw new UnsupportedOperationException("Unimplemented"); }
 }

@@ -25,4 +25,6 @@ public interface MemoryReadable extends MemoryMapped {
     
     int readMEM8(int address);
     int readMEM16(int address);
+    
+    default int readMEM32(int address) { throw new UnsupportedOperationException("Unimplemented"); }
 }

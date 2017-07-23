@@ -22,5 +22,9 @@ package IOMap;
 public interface IOWritable extends IOMapped {
     
     int[] getWritableIOPorts();
+    
     void writeIO8(int port, int data);
+    
+    default void writeIO16(int port, int data) { throw new UnsupportedOperationException("Unimplemented"); }
+    default void writeIO32(int port, int data) { throw new UnsupportedOperationException("Unimplemented"); }
 }

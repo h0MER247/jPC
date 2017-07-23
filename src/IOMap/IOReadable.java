@@ -22,5 +22,9 @@ package IOMap;
 public interface IOReadable extends IOMapped {
     
     int[] getReadableIOPorts();
+    
     int readIO8(int port);
+    
+    default int readIO16(int port) { throw new UnsupportedOperationException("Unimplemented"); }
+    default int readIO32(int port) { throw new UnsupportedOperationException("Unimplemented"); }
 }

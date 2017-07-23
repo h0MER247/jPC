@@ -38,9 +38,14 @@ public final class IOMap {
         private final boolean VERBOSE = false;
         
         @Override public int[] getReadableIOPorts() { return null; }
-        @Override public int readIO8(int port) { if(VERBOSE) System.out.printf("Read from unmapped i/o port 0x%04x\n", port); return 0xff; }
+        @Override public int readIO8(int port) { if(VERBOSE) System.out.printf("Read 8 bit from unmapped i/o port 0x%04x\n", port); return 0xff; }
+        @Override public int readIO16(int port) { if(VERBOSE) System.out.printf("Read 16 bit from unmapped i/o port 0x%04x\n", port); return 0xffff; }
+        @Override public int readIO32(int port) { if(VERBOSE) System.out.printf("Read 32 bit from unmapped i/o port 0x%04x\n", port); return 0xffffffff; }
+        
         @Override public int[] getWritableIOPorts() { return null; }
-        @Override public void writeIO8(int port, int data) { if(VERBOSE) System.out.printf("Write to unmapped i/o port 0x%04x: 0x%02x\n", port, data); }
+        @Override public void writeIO8(int port, int data) { if(VERBOSE) System.out.printf("Write 8 bit to unmapped i/o port 0x%04x: 0x%02x\n", port, data); }
+        @Override public void writeIO16(int port, int data) { if(VERBOSE) System.out.printf("Write 16 bit to unmapped i/o port 0x%04x: 0x%04x\n", port, data); }
+        @Override public void writeIO32(int port, int data) { if(VERBOSE) System.out.printf("Write 32 bit to unmapped i/o port 0x%04x: 0x%08x\n", port, data); }
     }
     private final UnmappedIODevice m_unmapped;
     

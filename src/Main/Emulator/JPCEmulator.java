@@ -88,7 +88,7 @@ public final class JPCEmulator {
         
         // Initialize all components
         m_ioMap = new IOMap();
-        m_memMap = new MemoryMap();
+        m_memMap = new MemoryMap(20);
         m_scheduler = new Scheduler();
         
         m_components = new ArrayList<>();

@@ -264,8 +264,8 @@ public final class Intel8086 implements HardwareComponent {
     private CodeBlock findBlock(int base, int offset) throws DecoderException {
         
         // Get the code block cache of the current page
-        int addr = (base + offset) & MemoryMap.MAP_ADDR_MASK;
-        int page = (addr >>> MemoryMap.MAP_PAGE_BITS) & 0xff;
+        int addr = (base + offset) & m_memMap.MAP_ADDR_MASK;
+        int page = (addr >>> m_memMap.MAP_PAGE_BITS) & 0xff;
         CodeBlockCache blockCache = m_codeBlockCache[page];
         
         //
@@ -311,7 +311,7 @@ public final class Intel8086 implements HardwareComponent {
     
     private void invalidateBlocks(int address) {
         
-        CodeBlockCache blockCache = m_codeBlockCache[(address >>> MemoryMap.MAP_PAGE_BITS) & 0xff];
+        CodeBlockCache blockCache = m_codeBlockCache[(address >>> m_memMap.MAP_PAGE_BITS) & 0xff];
         
         blockCache.isParagraphInvalidated[(address >>> 4) & 0xff] = true;
         blockCache.isInvalidated = true;

@@ -26,14 +26,14 @@ public final class MemoryMap {
     /* ----------------------------------------------------- *
      * Some constants, needed for the memory mapping         *
      * ----------------------------------------------------- */
-    public static final int MAP_ADDR_BITS = 20;                                   // 20 bits
-    public static final int MAP_ADDR_SIZE = 1 << MAP_ADDR_BITS;                   // 1 Megabyte
-    public static final int MAP_ADDR_MASK = MAP_ADDR_SIZE - 1;                    // 0xfffff
-    public static final int MAP_PAGE_BITS = 12;                                   // 12 bits
-    public static final int MAP_PAGE_SIZE = 1 << MAP_PAGE_BITS;                   // 4096 Byte
-    public static final int MAP_PAGE_MASK = MAP_PAGE_SIZE - 1;                    // 0x00fff
-    public static final int MAP_PAGE_MASK2 = MAP_ADDR_MASK - MAP_PAGE_MASK;       // 0xff000
-    public static final int MAP_NUM_PAGES = 1 << (MAP_ADDR_BITS - MAP_PAGE_BITS); // 256 pages
+    public final int MAP_ADDR_BITS;
+    public final int MAP_ADDR_SIZE;
+    public final int MAP_ADDR_MASK;
+    public final int MAP_PAGE_BITS;
+    public final int MAP_PAGE_SIZE;
+    public final int MAP_PAGE_MASK;
+    public final int MAP_PAGE_MASK2;
+    public final int MAP_NUM_PAGES;
     
     /* ----------------------------------------------------- *
      * List of registered memory devices                     *
@@ -49,12 +49,14 @@ public final class MemoryMap {
         private final boolean VERBOSE = false;
         
         @Override public int[][] getReadableMemoryAddresses() { return null; }
-        @Override public int readMEM8(int address) { if(VERBOSE) System.out.printf("Read 8 bit from unmapped memory address 0x%05x\n", address); return 0xff; }
-        @Override public int readMEM16(int address) { if(VERBOSE) System.out.printf("Read 16 bit from unmapped memory address 0x%05x\n", address); return 0xffff; }
+        @Override public int readMEM8(int address) { if(VERBOSE) System.out.printf("Read 8 bit from unmapped memory address 0x%08x\n", address); return 0xff; }
+        @Override public int readMEM16(int address) { if(VERBOSE) System.out.printf("Read 16 bit from unmapped memory address 0x%08x\n", address); return 0xffff; }
+        @Override public int readMEM32(int address) { if(VERBOSE) System.out.printf("Read 32 bit from unmapped memory address 0x%08x\n", address); return 0xffffffff; }
 
         @Override public int[][] getWritableMemoryAddresses() { return null; }
-        @Override public void writeMEM8(int address, int data) { if(VERBOSE) System.out.printf("Write 8 bit to unmapped memory address 0x%05x: 0x%02x\n", address, data); }
-        @Override public void writeMEM16(int address, int data) { if(VERBOSE) System.out.printf("Write 16 bit to unmapped memory address 0x%05x: 0x%04x\n", address, data); }
+        @Override public void writeMEM8(int address, int data) { if(VERBOSE) System.out.printf("Write 8 bit to unmapped memory address 0x%08x: 0x%02x\n", address, data); }
+        @Override public void writeMEM16(int address, int data) { if(VERBOSE) System.out.printf("Write 16 bit to unmapped memory address 0x%08x: 0x%04x\n", address, data); }
+        @Override public void writeMEM32(int address, int data) { if(VERBOSE) System.out.printf("Write 32 bit to unmapped memory address 0x%08x: 0x%08x\n", address, data); }
     }
     private final UnmappedMemoryDevice m_unmapped;
     
@@ -68,7 +70,16 @@ public final class MemoryMap {
     
     
     
-    public MemoryMap() {
+    public MemoryMap(int sizeOfAddressBusInBit) {
+        
+        MAP_ADDR_BITS = sizeOfAddressBusInBit;
+        MAP_ADDR_SIZE = 1 << MAP_ADDR_BITS;
+        MAP_ADDR_MASK = MAP_ADDR_SIZE - 1;
+        MAP_PAGE_BITS = 12;
+        MAP_PAGE_SIZE = 1 << MAP_PAGE_BITS;
+        MAP_PAGE_MASK = MAP_PAGE_SIZE - 1;
+        MAP_PAGE_MASK2 = MAP_ADDR_MASK - MAP_PAGE_MASK;
+        MAP_NUM_PAGES = 1 << (MAP_ADDR_BITS - MAP_PAGE_BITS);
         
         m_devices = new HashMap<>();
         
