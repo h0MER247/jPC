@@ -26,14 +26,11 @@ public final class MemoryMap {
     /* ----------------------------------------------------- *
      * Some constants, needed for the memory mapping         *
      * ----------------------------------------------------- */
-    public final int MAP_ADDR_BITS;
-    public final int MAP_ADDR_SIZE;
     public final int MAP_ADDR_MASK;
     public final int MAP_PAGE_BITS;
-    public final int MAP_PAGE_SIZE;
-    public final int MAP_PAGE_MASK;
-    public final int MAP_PAGE_MASK2;
-    public final int MAP_NUM_PAGES;
+    private final int MAP_PAGE_SIZE;
+    private final int MAP_PAGE_MASK;
+    private final int MAP_NUM_PAGES;
     
     /* ----------------------------------------------------- *
      * List of registered memory devices                     *
@@ -72,14 +69,11 @@ public final class MemoryMap {
     
     public MemoryMap(int sizeOfAddressBusInBit) {
         
-        MAP_ADDR_BITS = sizeOfAddressBusInBit;
-        MAP_ADDR_SIZE = 1 << MAP_ADDR_BITS;
-        MAP_ADDR_MASK = MAP_ADDR_SIZE - 1;
+        MAP_ADDR_MASK = (1 << sizeOfAddressBusInBit) - 1;
         MAP_PAGE_BITS = 12;
         MAP_PAGE_SIZE = 1 << MAP_PAGE_BITS;
         MAP_PAGE_MASK = MAP_PAGE_SIZE - 1;
-        MAP_PAGE_MASK2 = MAP_ADDR_MASK - MAP_PAGE_MASK;
-        MAP_NUM_PAGES = 1 << (MAP_ADDR_BITS - MAP_PAGE_BITS);
+        MAP_NUM_PAGES = 1 << (sizeOfAddressBusInBit - MAP_PAGE_BITS);
         
         m_devices = new HashMap<>();
         
