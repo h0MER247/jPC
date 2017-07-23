@@ -41,12 +41,12 @@ import Hardware.CPU.Intel8086.Operands.Operand;
 import Hardware.CPU.Intel8086.Operands.Register.OperandRegister16;
 import Hardware.CPU.Intel8086.Operands.Register.OperandRegister8;
 import Hardware.CPU.Intel8086.Operands.Segment.OperandSegment;
-import Hardware.CPU.Intel8086.Pointer.NoOperands.PointerWithDirectAddress;
-import Hardware.CPU.Intel8086.Pointer.OneOperand.PointerWithOneOperand;
-import Hardware.CPU.Intel8086.Pointer.OneOperand.PointerWithOneOperandAndDisplacement;
+import Hardware.CPU.Intel8086.Pointer.PointerDisplacement;
+import Hardware.CPU.Intel8086.Pointer.PointerBase;
+import Hardware.CPU.Intel8086.Pointer.PointerBaseDisplacement;
 import Hardware.CPU.Intel8086.Pointer.Pointer;
-import Hardware.CPU.Intel8086.Pointer.TwoOperands.PointerWithTwoOperands;
-import Hardware.CPU.Intel8086.Pointer.TwoOperands.PointerWithTwoOperandsAndDisplacement;
+import Hardware.CPU.Intel8086.Pointer.PointerBaseIndex;
+import Hardware.CPU.Intel8086.Pointer.PointerBaseIndexDisplacement;
 import Hardware.CPU.Intel8086.Register.Reg16;
 import Hardware.CPU.Intel8086.Register.Reg8;
 import Hardware.CPU.Intel8086.Segments.Segment;
@@ -2998,25 +2998,25 @@ public final class Decoder {
     
     private Pointer buildPointer(int address) {
         
-        return new PointerWithDirectAddress(address);
+        return new PointerDisplacement(address);
     }
     
     private Pointer buildPointer(Reg16 baseReg, int displacement) {
         
         if(displacement == 0)
-            return new PointerWithOneOperand(baseReg);
+            return new PointerBase(baseReg);
         else
-            return new PointerWithOneOperandAndDisplacement(baseReg, displacement);
+            return new PointerBaseDisplacement(baseReg, displacement);
     }
     
-    private Pointer buildPointer(Reg16 baseReg1,
-                                 Reg16 baseReg2,
+    private Pointer buildPointer(Reg16 baseReg,
+                                 Reg16 indexReg,
                                  int displacement) {
         
         if(displacement == 0)
-            return new PointerWithTwoOperands(baseReg1, baseReg2);
+            return new PointerBaseIndex(baseReg, indexReg);
         else
-            return new PointerWithTwoOperandsAndDisplacement(baseReg1, baseReg2, displacement);
+            return new PointerBaseIndexDisplacement(baseReg, indexReg, displacement);
     }
     
     // </editor-fold>

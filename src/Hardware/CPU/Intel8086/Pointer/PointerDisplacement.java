@@ -15,31 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package Hardware.CPU.Intel8086.Pointer.OneOperand;
-
-import Hardware.CPU.Intel8086.Pointer.Pointer;
-import Hardware.CPU.Intel8086.Register.Reg16;
+package Hardware.CPU.Intel8086.Pointer;
 
 
 
-public final class PointerWithOneOperand implements Pointer {
+public final class PointerDisplacement implements Pointer {
 
-    private final Reg16 m_base1;
+    private final int m_disp;
 
-    public PointerWithOneOperand(Reg16 base1) {
+    public PointerDisplacement(int disp) {
 
-        m_base1 = base1;
+        m_disp = disp & 0xffff;
     }
 
     @Override
     public int getAddress() {
 
-        return m_base1.getValue();
+        return m_disp;
     }
 
     @Override
     public String toString() {
 
-        return m_base1.toString();
+        return String.format("%04xh", m_disp);
     }
 }

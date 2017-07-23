@@ -15,30 +15,30 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package Hardware.CPU.Intel8086.Pointer.NoOperands;
+package Hardware.CPU.Intel8086.Pointer;
 
-import Hardware.CPU.Intel8086.Pointer.Pointer;
+import Hardware.CPU.Intel8086.Register.Reg16;
 
 
 
-public final class PointerWithDirectAddress implements Pointer {
+public final class PointerBase implements Pointer {
 
-    private final int m_addr;
+    private final Reg16 m_base;
 
-    public PointerWithDirectAddress(int addr) {
+    public PointerBase(Reg16 base) {
 
-        m_addr = addr & 0xffff;
+        m_base = base;
     }
 
     @Override
     public int getAddress() {
 
-        return m_addr;
+        return m_base.getValue();
     }
 
     @Override
     public String toString() {
 
-        return String.format("%04xh", m_addr);
+        return m_base.toString();
     }
 }
