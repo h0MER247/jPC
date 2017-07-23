@@ -18,7 +18,10 @@
 package Main;
 
 import Main.UI.JPCWindow;
+import java.awt.DefaultKeyboardFocusManager;
 import java.awt.EventQueue;
+import java.awt.KeyEventPostProcessor;
+import java.awt.KeyboardFocusManager;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.swing.UIManager;
@@ -32,6 +35,16 @@ public class Main {
         
         EventQueue.invokeLater(() -> {
             
+            KeyboardFocusManager.setCurrentKeyboardFocusManager(new DefaultKeyboardFocusManager() {
+
+                @Override
+                public void addKeyEventPostProcessor(KeyEventPostProcessor p) {
+
+                    if(!p.getClass().getName().contains("WindowsRootPaneUI$AltProcessor"))
+                        super.addKeyEventPostProcessor(p);
+                }
+            });
+            
             try {
                 
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -41,7 +54,7 @@ public class Main {
                   IllegalAccessException |
                   UnsupportedLookAndFeelException ex) {
                 
-                System.err.println("jPC could not set the look and feel for your system");
+                System.err.println("jPC couldn't set the systems native look and feel");
             }
             
             JPCWindow wnd = new JPCWindow(720, 400);
