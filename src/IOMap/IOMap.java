@@ -169,5 +169,25 @@ public final class IOMap {
         m_write[port].writeIO8(port, data);
     }
     
+    public int readIO16(int port) {
+        
+        return m_read[port].readIO16(port);
+    }
+    
+    public void writeIO16(int port, int data) {
+        
+        m_write[port].writeIO16(port, data);
+    }
+    
+    public int readIO32(int port) {
+        
+        return m_read[port].readIO32(port);
+    }
+    
+    public void writeIO32(int port, int data) {
+        
+        m_write[port].writeIO32(port, data);
+    }
+    
     // </editor-fold>
 }

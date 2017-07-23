@@ -249,5 +249,23 @@ public final class MemoryMap {
         m_write[page].writeMEM16(m_readOffset[page] + (address & MAP_PAGE_MASK), data);
     }
     
+    public int readMEM32(int address) {
+            
+        address &= MAP_ADDR_MASK;
+        
+        int page = address >>> MAP_PAGE_BITS;
+        
+        return m_read[page].readMEM32(m_readOffset[page] + (address & MAP_PAGE_MASK));
+    }
+    
+    public void writeMEM32(int address, int data) {
+        
+        address &= MAP_ADDR_MASK;
+        
+        int page = address >>> MAP_PAGE_BITS;
+        
+        m_write[page].writeMEM32(m_readOffset[page] + (address & MAP_PAGE_MASK), data);
+    }
+    
     // </editor-fold>
 }
