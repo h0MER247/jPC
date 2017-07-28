@@ -1,4 +1,4 @@
-# jPC - A Java PC XT Emulator
+# jPC - A PC/XT Emulator written in Java
 
 ### Features
  - Emulation of the Intel 8086 CPU. Decoded instruction blocks get cached to speed up the emulation.
