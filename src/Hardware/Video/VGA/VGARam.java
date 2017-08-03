@@ -191,7 +191,7 @@ public final class VGARam implements HardwareComponent,
             readPlane = (m_readPlane & 0x02) | (address & 0x01);
             
             address &= ~0x01;
-            address <<= 1;
+            address <<= 2;
         }
         else {
             
@@ -258,7 +258,7 @@ public final class VGARam implements HardwareComponent,
                 writePlane <<= 1;
             
             address &= ~0x01;
-            address <<= 1;
+            address <<= 2;
         }
         else {
             

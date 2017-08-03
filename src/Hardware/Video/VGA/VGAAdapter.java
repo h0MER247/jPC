@@ -1156,8 +1156,8 @@ public abstract class VGAAdapter extends GraphicsCard
             
             for(int x = 0; x < m_frameWidth; x += charWidth, addr += 4, offset += charWidth) {
                 
-                int chr = m_vram.getData(addr + 0);
-                int att = m_vram.getData(addr + 1);
+                int chr = m_vram.getData(addr << 1);
+                int att = m_vram.getData((addr << 1) + 1);
                 int fntAddr = (((att & 0x08) != 0) ? fontAddressA : fontAddressB) + (chr << 7) + fontRowOffset;
                 int fnt = m_vram.getData(fntAddr + 2);
                 
@@ -1221,8 +1221,8 @@ public abstract class VGAAdapter extends GraphicsCard
             
             for(int x = 0; x < m_frameWidth; x += charWidth, addr += 4, offset += charWidth) {
                 
-                int chr = m_vram.getData(addr);
-                int att = m_vram.getData(addr + 1);
+                int chr = m_vram.getData(addr << 1);
+                int att = m_vram.getData((addr << 1) + 1);
                 int fntAddr = (((att & 0x08) != 0) ? fontAddressA : fontAddressB)  + (chr << 7) + fontRowOffset;
                 int fnt = m_vram.getData(fntAddr + 2);
                 
@@ -1288,8 +1288,8 @@ public abstract class VGAAdapter extends GraphicsCard
             
             for(int x = 0; x < m_frameWidth; x += 16, addr += 4, offset += 16) {
                 
-                int p1 = m_vram.getData(addr);
-                int p2 = m_vram.getData(addr + 1);
+                int p1 = m_vram.getData(addr << 1);
+                int p2 = m_vram.getData((addr << 1) + 1);
                 
                 m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 6) & 0x03]];
                 m_frameData[offset + 2] = m_frameData[offset + 3] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 4) & 0x03]];
@@ -1329,8 +1329,8 @@ public abstract class VGAAdapter extends GraphicsCard
             
             for(int x = 0; x < m_frameWidth; x += 8, addr += 4, offset += 8) {
                 
-                int p1 = m_vram.getData(addr);
-                int p2 = m_vram.getData(addr + 1);
+                int p1 = m_vram.getData(addr << 1);
+                int p2 = m_vram.getData((addr << 1) + 1);
                 
                 m_frameData[offset] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 6) & 0x03]];
                 m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 4) & 0x03]];
