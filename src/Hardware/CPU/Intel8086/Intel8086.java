@@ -47,7 +47,6 @@ public final class Intel8086 implements HardwareComponent {
     public final Segment CS, DS, ES, SS;
     public final Flags FLAGS;
     public boolean HALTED;
-    public CodeBlock m_currentBlock;
     
     /* ----------------------------------------------------- *
      * Code block decoder                                    *
@@ -66,6 +65,7 @@ public final class Intel8086 implements HardwareComponent {
     private final CodeBlockCache[] m_codeBlockCache;
     private final Integer[] m_integerLUT;
     private long m_timeNextCacheClear;
+    private CodeBlock m_currentBlock;
     
     /* ----------------------------------------------------- *
      * Interrupt hooks                                       *
@@ -115,8 +115,8 @@ public final class Intel8086 implements HardwareComponent {
         m_decoder = new Decoder(this);
         
         // Initialize code block cache
-        m_codeBlockCache = new CodeBlockCache[256];
-        for(int i = 0; i < 256; i++)
+        m_codeBlockCache = new CodeBlockCache[memMap.MAP_PAGE_COUNT];
+        for(int i = 0; i < m_codeBlockCache.length; i++)
             m_codeBlockCache[i] = new CodeBlockCache();
         
         // Initialize Integer lookup table. This is needed in order to bypass

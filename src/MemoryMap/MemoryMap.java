@@ -28,9 +28,9 @@ public final class MemoryMap {
      * ----------------------------------------------------- */
     public final int MAP_ADDR_MASK;
     public final int MAP_PAGE_BITS;
+    public final int MAP_PAGE_COUNT;
     private final int MAP_PAGE_SIZE;
     private final int MAP_PAGE_MASK;
-    private final int MAP_NUM_PAGES;
     
     /* ----------------------------------------------------- *
      * List of registered memory devices                     *
@@ -73,14 +73,14 @@ public final class MemoryMap {
         MAP_PAGE_BITS = 12;
         MAP_PAGE_SIZE = 1 << MAP_PAGE_BITS;
         MAP_PAGE_MASK = MAP_PAGE_SIZE - 1;
-        MAP_NUM_PAGES = 1 << (sizeOfAddressBusInBit - MAP_PAGE_BITS);
+        MAP_PAGE_COUNT = 1 << (sizeOfAddressBusInBit - MAP_PAGE_BITS);
         
         m_devices = new HashMap<>();
         
-        m_read = new MemoryReadable[MAP_NUM_PAGES];
-        m_readOffset = new int[MAP_NUM_PAGES];
-        m_write = new MemoryWritable[MAP_NUM_PAGES];
-        m_writeOffset = new int[MAP_NUM_PAGES];
+        m_read = new MemoryReadable[MAP_PAGE_COUNT];
+        m_readOffset = new int[MAP_PAGE_COUNT];
+        m_write = new MemoryWritable[MAP_PAGE_COUNT];
+        m_writeOffset = new int[MAP_PAGE_COUNT];
         m_unmapped = new UnmappedMemoryDevice();
     }
     
@@ -90,7 +90,7 @@ public final class MemoryMap {
     
     public void reset() {
         
-        for(int i = 0; i < MAP_NUM_PAGES; i++) {
+        for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
             m_read[i] = m_unmapped;
             m_readOffset[i] = i << MAP_PAGE_BITS;
@@ -138,7 +138,7 @@ public final class MemoryMap {
     
     private void mapDeviceRead(MemoryReadable memDevice) {
         
-        for(int i = 0; i < MAP_NUM_PAGES; i++) {
+        for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
             if(m_read[i] == memDevice) {
                 
@@ -157,7 +157,7 @@ public final class MemoryMap {
     
     private void mapDeviceWrite(MemoryWritable memDevice) {
         
-        for(int i = 0; i < MAP_NUM_PAGES; i++) {
+        for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
             if(m_write[i] == memDevice) {
                 
