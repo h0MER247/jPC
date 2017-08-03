@@ -1,7 +1,7 @@
 /nbproject/private/
 /build/
 /nbbuild/
-/dist/
+/dist/*.txt
 /nbdist/
 /.nb-gradle/
 *.bin
