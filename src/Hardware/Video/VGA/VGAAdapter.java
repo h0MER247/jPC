@@ -1179,8 +1179,8 @@ public abstract class VGAAdapter extends GraphicsCard
                     if(((att & 0x80) != 0) && ((m_frameNumber & 0x3f) >= 0x20))
                         fgColor = bgColor;
                 }
-                fgColor = m_dacPaletteCache[m_atcPaletteCache[fgColor]];
-                bgColor = m_dacPaletteCache[m_atcPaletteCache[bgColor]];
+                fgColor = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[fgColor]];
+                bgColor = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[bgColor]];
                 
                 
                 for(int cx = 0; cx < charWidth; cx += 2)
@@ -1246,8 +1246,8 @@ public abstract class VGAAdapter extends GraphicsCard
                     if(((att & 0x80) != 0) && ((m_frameNumber & 0x3f) >= 0x20))
                         fgColor = bgColor;
                 }
-                fgColor = m_dacPaletteCache[m_atcPaletteCache[fgColor]];
-                bgColor = m_dacPaletteCache[m_atcPaletteCache[bgColor]];
+                fgColor = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[fgColor]];
+                bgColor = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[bgColor]];
                 
                 
                 for(int cx = 0; cx < charWidth; cx++)
@@ -1291,15 +1291,15 @@ public abstract class VGAAdapter extends GraphicsCard
                 int p1 = m_vram.getData(addr << 1);
                 int p2 = m_vram.getData((addr << 1) + 1);
                 
-                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 6) & 0x03]];
-                m_frameData[offset + 2] = m_frameData[offset + 3] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 4) & 0x03]];
-                m_frameData[offset + 4] = m_frameData[offset + 5] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 2) & 0x03]];
-                m_frameData[offset + 6] = m_frameData[offset + 7] = m_dacPaletteCache[m_atcPaletteCache[p1 & 0x03]];
+                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 6) & 0x03]];
+                m_frameData[offset + 2] = m_frameData[offset + 3] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 4) & 0x03]];
+                m_frameData[offset + 4] = m_frameData[offset + 5] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 2) & 0x03]];
+                m_frameData[offset + 6] = m_frameData[offset + 7] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[p1 & 0x03]];
                 
-                m_frameData[offset + 8] = m_frameData[offset + 9] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 6) & 0x03]];
-                m_frameData[offset + 10] = m_frameData[offset + 11] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 4) & 0x03]];
-                m_frameData[offset + 12] = m_frameData[offset + 13] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 2) & 0x03]];
-                m_frameData[offset + 14] = m_frameData[offset + 15] = m_dacPaletteCache[m_atcPaletteCache[p2 & 0x03]];
+                m_frameData[offset + 8] = m_frameData[offset + 9] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 6) & 0x03]];
+                m_frameData[offset + 10] = m_frameData[offset + 11] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 4) & 0x03]];
+                m_frameData[offset + 12] = m_frameData[offset + 13] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 2) & 0x03]];
+                m_frameData[offset + 14] = m_frameData[offset + 15] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[p2 & 0x03]];
             }
         }
     }
@@ -1332,15 +1332,15 @@ public abstract class VGAAdapter extends GraphicsCard
                 int p1 = m_vram.getData(addr << 1);
                 int p2 = m_vram.getData((addr << 1) + 1);
                 
-                m_frameData[offset] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 6) & 0x03]];
-                m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 4) & 0x03]];
-                m_frameData[offset + 2] = m_dacPaletteCache[m_atcPaletteCache[(p1 >> 2) & 0x03]];
-                m_frameData[offset + 3] = m_dacPaletteCache[m_atcPaletteCache[p1 & 0x03]];
+                m_frameData[offset] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 6) & 0x03]];
+                m_frameData[offset + 1] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 4) & 0x03]];
+                m_frameData[offset + 2] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p1 >> 2) & 0x03]];
+                m_frameData[offset + 3] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[p1 & 0x03]];
                 
-                m_frameData[offset + 4] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 6) & 0x03]];
-                m_frameData[offset + 5] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 4) & 0x03]];
-                m_frameData[offset + 6] = m_dacPaletteCache[m_atcPaletteCache[(p2 >> 2) & 0x03]];
-                m_frameData[offset + 7] = m_dacPaletteCache[m_atcPaletteCache[p2 & 0x03]];
+                m_frameData[offset + 4] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 6) & 0x03]];
+                m_frameData[offset + 5] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 4) & 0x03]];
+                m_frameData[offset + 6] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[(p2 >> 2) & 0x03]];
+                m_frameData[offset + 7] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[p2 & 0x03]];
             }
         }
     }
@@ -1395,7 +1395,7 @@ public abstract class VGAAdapter extends GraphicsCard
                              m_pixelLUT[p2][px][2] |
                              m_pixelLUT[p3][px][3]) & enableMask;
                 
-                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_atcPaletteCache[pixel]];
+                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[pixel]];
             }
         }
     }
@@ -1455,7 +1455,7 @@ public abstract class VGAAdapter extends GraphicsCard
                              m_pixelLUT[p2][px][2] |
                              m_pixelLUT[p3][px][3]) & enableMask;
                 
-                m_frameData[offset] = m_dacPaletteCache[m_atcPaletteCache[pixel]];
+                m_frameData[offset] = m_dacPaletteCache[m_dacPixelMask & m_atcPaletteCache[pixel]];
             }
         }
     }
@@ -1486,10 +1486,10 @@ public abstract class VGAAdapter extends GraphicsCard
                 int p2 = m_vram.getData(addr + 2);
                 int p3 = m_vram.getData(addr + 3);
                 
-                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[p0];
-                m_frameData[offset + 2] = m_frameData[offset + 3] = m_dacPaletteCache[p1];
-                m_frameData[offset + 4] = m_frameData[offset + 5] = m_dacPaletteCache[p2];
-                m_frameData[offset + 6] = m_frameData[offset + 7] = m_dacPaletteCache[p3];
+                m_frameData[offset] = m_frameData[offset + 1] = m_dacPaletteCache[m_dacPixelMask & p0];
+                m_frameData[offset + 2] = m_frameData[offset + 3] = m_dacPaletteCache[m_dacPixelMask & p1];
+                m_frameData[offset + 4] = m_frameData[offset + 5] = m_dacPaletteCache[m_dacPixelMask & p2];
+                m_frameData[offset + 6] = m_frameData[offset + 7] = m_dacPaletteCache[m_dacPixelMask & p3];
             }
         }
     }
@@ -1520,10 +1520,10 @@ public abstract class VGAAdapter extends GraphicsCard
                 int p2 = m_vram.getData(addr + 2);
                 int p3 = m_vram.getData(addr + 3);
                 
-                m_frameData[offset] = m_dacPaletteCache[p0];
-                m_frameData[offset + 1] = m_dacPaletteCache[p1];
-                m_frameData[offset + 2] = m_dacPaletteCache[p2];
-                m_frameData[offset + 3] = m_dacPaletteCache[p3];
+                m_frameData[offset] = m_dacPaletteCache[m_dacPixelMask & p0];
+                m_frameData[offset + 1] = m_dacPaletteCache[m_dacPixelMask & p1];
+                m_frameData[offset + 2] = m_dacPaletteCache[m_dacPixelMask & p2];
+                m_frameData[offset + 3] = m_dacPaletteCache[m_dacPixelMask & p3];
             }
         }
     }
