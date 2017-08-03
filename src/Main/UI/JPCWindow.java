@@ -41,7 +41,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.prefs.Preferences;
 import javax.swing.JFrame;
 import javax.swing.filechooser.FileSystemView;
@@ -49,11 +48,6 @@ import javax.swing.filechooser.FileSystemView;
 
 
 public final class JPCWindow extends JFrame {
-    
-    /* ----------------------------------------------------- *
-     * Screenshot directory                                  *
-     * ----------------------------------------------------- */
-    private File SCREENSHOT_DIR = new File(".\\screenshots\\");
     
     /* ----------------------------------------------------- *
      * Emulator configuration                                *
