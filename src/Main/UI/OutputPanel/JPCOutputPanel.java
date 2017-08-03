@@ -32,6 +32,10 @@ import java.awt.font.GlyphVector;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JPanel;
 import Hardware.Video.GraphicsCardListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 
 
@@ -285,6 +289,23 @@ public abstract class JPCOutputPanel extends JPanel
     public abstract boolean isFullscreenEnabled();
     public abstract boolean isDriveIndicatorLit();
     public abstract String getStatisticData();   
+    
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Taking screenshots">
+    
+    public void takeScreenshot(File file) throws IOException {
+        
+        BufferedImage img = new BufferedImage(
+                
+            m_image.getWidth(null),
+            m_image.getHeight(null),
+            BufferedImage.TYPE_INT_RGB
+        );
+        img.getGraphics().drawImage(m_image, 0, 0, null);
+        
+        ImageIO.write(img, "png", file);
+    }
     
     // </editor-fold>
 }

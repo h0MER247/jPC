@@ -40,12 +40,20 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.prefs.Preferences;
 import javax.swing.JFrame;
+import javax.swing.filechooser.FileSystemView;
 
 
 
 public final class JPCWindow extends JFrame {
+    
+    /* ----------------------------------------------------- *
+     * Screenshot directory                                  *
+     * ----------------------------------------------------- */
+    private File SCREENSHOT_DIR = new File(".\\screenshots\\");
     
     /* ----------------------------------------------------- *
      * Emulator configuration                                *
@@ -162,6 +170,7 @@ public final class JPCWindow extends JFrame {
         m_menuBar.getEmulationMenu().addOnFullscreenHandler(this::onToggleFullscreen);
         m_menuBar.getEmulationMenu().addOnExitHandler(this::onExit);
         m_menuBar.getEmulationMenu().addOnCtrlAltDeleteHandler(this::onResetSoft);
+        m_menuBar.getEmulationMenu().addOnScreenshotHandler(this::onTakeScreenshot);
         
         // CPU
         m_menuBar.getCPUMenu().addOnFrequencyHandler(this::onSetCPUFrequency);
@@ -260,6 +269,7 @@ public final class JPCWindow extends JFrame {
         m_menuBar.getEmulationMenu().setResetEnabled(isRunning);
         m_menuBar.getEmulationMenu().setStatisticEnabled(isRunning);
         m_menuBar.getEmulationMenu().setCtrlAltDeleteEnabled(isRunning);
+        m_menuBar.getEmulationMenu().setScreenshotEnabled(isRunning);
         
         repaint();
     }
@@ -274,6 +284,7 @@ public final class JPCWindow extends JFrame {
             m_menuBar.getEmulationMenu().setResetEnabled(false);
             m_menuBar.getEmulationMenu().setStatisticEnabled(false);
             m_menuBar.getEmulationMenu().setCtrlAltDeleteEnabled(false);
+            m_menuBar.getEmulationMenu().setScreenshotEnabled(false);
             
             SwingDialogs.showExceptionMessage("jPC died", ex, cpuDump);
             repaint();
@@ -460,6 +471,26 @@ public final class JPCWindow extends JFrame {
         catch(IOException ex) {
             
             SwingDialogs.showExceptionMessage("Error occured", ex);
+        }
+    }
+    
+    private void onTakeScreenshot() {
+        
+        File defaultUserDir = FileSystemView.getFileSystemView().getDefaultDirectory();
+        File screenshotDir = new File(defaultUserDir, ".\\jPC\\");
+        
+        try {
+            
+            if(!Files.isDirectory(screenshotDir.toPath()))
+                Files.createDirectory(screenshotDir.toPath());
+            
+            int idx = screenshotDir.listFiles((d, n) -> n.startsWith("screen") && n.endsWith(".png")).length;
+            
+            m_outputPanel.takeScreenshot(new File(screenshotDir, String.format("screen%d.png", idx)));
+        }
+        catch(IOException ex) {
+            
+            SwingDialogs.showExceptionMessage("Screenshot couldn't be stored", ex);
         }
     }
     

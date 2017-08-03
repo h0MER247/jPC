@@ -30,6 +30,7 @@ public final class JPCMenuEmulation extends JMenu {
     private final JMenuItem m_reset;
     private final JMenuItem m_pause;
     private final JMenuItem m_sendCtrlAltDelete;
+    private final JMenuItem m_screenshot;
     private final JMenuItem m_statistic;
     private final JMenuItem m_fullscreen;
     private final JMenuItem m_exit;
@@ -44,6 +45,7 @@ public final class JPCMenuEmulation extends JMenu {
         add(m_reset = new JMenuItem("Reset"));
         add(m_pause = new JCheckBoxMenuItem("Pause"));
         add(m_sendCtrlAltDelete = new JMenuItem("Send Ctrl+Alt+Delete"));
+        add(m_screenshot = new JMenuItem("Take screenshot"));
         addSeparator();
         add(m_statistic = new JCheckBoxMenuItem("Enable statistics"));
         addSeparator();
@@ -55,6 +57,7 @@ public final class JPCMenuEmulation extends JMenu {
         m_pause.setEnabled(false);
         m_statistic.setEnabled(false);
         m_sendCtrlAltDelete.setEnabled(false);
+        m_screenshot.setEnabled(false);
     }
     
     
@@ -77,6 +80,11 @@ public final class JPCMenuEmulation extends JMenu {
     public void addOnCtrlAltDeleteHandler(Runnable handler) {
         
         m_sendCtrlAltDelete.addActionListener(l -> handler.run());
+    }
+    
+    public void addOnScreenshotHandler(Runnable handler) {
+        
+        m_screenshot.addActionListener(l -> handler.run());
     }
     
     public void addOnStatisticHandler(Consumer<Boolean> handler) {
@@ -131,5 +139,10 @@ public final class JPCMenuEmulation extends JMenu {
     public void setCtrlAltDeleteEnabled(boolean isEnabled) {
         
         m_sendCtrlAltDelete.setEnabled(isEnabled);
+    }
+    
+    public void setScreenshotEnabled(boolean isEnabled) {
+        
+        m_screenshot.setEnabled(isEnabled);
     }
 }
