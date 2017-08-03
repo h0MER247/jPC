@@ -2929,12 +2929,8 @@ public final class Decoder {
                     else
                         instr = new REPNZ(m_cpu, instr, getCycleCount(2));
                 }
-                else {
-                    
-                    throw new DecoderException(String.format("Unknown REP Opcode (Instruction: %s)", instr.toString()));
-                }
             }
-
+            
             // Lock prefix?
             if(m_lock)
                 instr = new LOCK(m_cpu, instr, getCycleCount(4));
