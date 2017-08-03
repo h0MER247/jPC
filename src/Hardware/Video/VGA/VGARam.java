@@ -178,6 +178,7 @@ public final class VGARam implements HardwareComponent,
         
         // Determine address and plane
         address &= m_ramBankMask;
+        address += m_ramBankOffsetRead;
         
         if(m_chain4) {
             
@@ -242,6 +243,7 @@ public final class VGARam implements HardwareComponent,
         
         /* Determine address and plane */
         address &= m_ramBankMask;
+        address += m_ramBankOffsetWrite;
         
         if(m_chain4) {
             
@@ -450,12 +452,12 @@ public final class VGARam implements HardwareComponent,
     
     private void setData(int address, int data) {
         
-        m_ram[(m_ramBankOffsetWrite + address) & m_ramSizeMask] = data;
+        m_ram[address & m_ramSizeMask] = data;
     }
     
     public int getData(int address) {
         
-        return m_ram[(m_ramBankOffsetRead + address) & m_ramSizeMask];
+        return m_ram[address & m_ramSizeMask];
     }
     
     // </editor-fold>
