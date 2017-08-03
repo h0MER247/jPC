@@ -180,37 +180,34 @@ public final class VGARam implements HardwareComponent,
         address &= m_ramBankMask;
         address += m_ramBankOffsetRead;
         
-        if(m_chain4) {
-            
-            readPlane = address & 0x03;
-            
-            address &= ~0x03;
-        }
-        else if(m_oddEvenRead) {
-            
-            readPlane = (m_readPlane & 0x02) | (address & 0x01);
-            
-            address &= ~0x01;
-            address <<= 2;
-        }
-        else {
-            
-            readPlane = m_readPlane;
-            
-            address <<= 2;
-        }
-        
         // Fill latches
-        m_ramLatches[0] = getData(address);
-        m_ramLatches[1] = getData(address + 1);
-        m_ramLatches[2] = getData(address + 2);
-        m_ramLatches[3] = getData(address + 3);
+        for(int i = 0, lAddr = address << 2; i < 4; i++, lAddr++)
+            m_ramLatches[i] = getData(lAddr);
         
         // Read data
         switch(m_readMode) {
             
             case 0:
-                return m_ramLatches[readPlane];
+                if(m_chain4) {
+
+                    readPlane = address & 0x03;
+
+                    address &= ~0x03;
+                }
+                else if(m_oddEvenRead) {
+
+                    readPlane = (m_readPlane & 0x02) | (address & 0x01);
+
+                    address &= ~0x01;
+                    address <<= 2;
+                }
+                else {
+
+                    readPlane = m_readPlane;
+
+                    address <<= 2;
+                }
+                return getData(address | readPlane);
                 
             case 1:
                 return 0xff ^ (((m_colorCare[0] & m_ramLatches[0]) ^ m_colorCompare[0]) |
