@@ -19,6 +19,7 @@ package IOMap;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.IntStream;
 
 
 
@@ -187,6 +188,16 @@ public final class IOMap {
     public void writeIO32(int port, int data) {
         
         m_write[port].writeIO32(port, data);
+    }
+    
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Extending I/O ports">
+    
+    public static int[] extendPorts(int[] ports, int[] additionalPorts) {
+        
+        return IntStream.concat(Arrays.stream(ports),
+                                Arrays.stream(additionalPorts)).toArray();
     }
     
     // </editor-fold>
