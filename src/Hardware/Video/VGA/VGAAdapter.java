@@ -322,7 +322,7 @@ public abstract class VGAAdapter extends GraphicsCard
                 
                 
             default:
-                throw new IllegalArgumentException(String.format("%s: Illegal access - readIO8(), port %04xh", getClass().getName(), port));
+                throw new IllegalArgumentException(String.format("Illegal access - readIO8(), port %04xh", port));
         }
     }
 
@@ -466,7 +466,7 @@ public abstract class VGAAdapter extends GraphicsCard
                 
             
             default:
-                throw new IllegalArgumentException(String.format("%s: Illegal access - writeIO8(), port %04xh, data %02xh", getClass().getName(), port, data));
+                throw new IllegalArgumentException(String.format("Illegal access - writeIO8(), port %04xh, data %02xh", port, data));
         }
     }
     
