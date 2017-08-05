@@ -92,7 +92,7 @@ public abstract class JPCOutputPanel extends JPanel
     
     @Override
     public void onInit(int[] frameData, int width, int height) {
-
+        
         m_imageSource = new MemoryImageSource(width, height, frameData, 0, width);
         m_imageSource.setAnimated(true);
         
@@ -115,12 +115,20 @@ public abstract class JPCOutputPanel extends JPanel
 
         super.paintComponent(g);
         
-        if(m_image != null) {
+        Graphics2D g2d = getAndConfigureGraphics2D(g);
+        
+        
+        int pnlW = getWidth();
+        int pnlH = getHeight();
+        
+        if(isEmulationStopped()) {
+            
+            drawOverlay(g2d, pnlW, pnlH);
+        }
+        else {
         
             // Center the output (m_image) inside the JPanel while retaining
             // its aspect ratio
-            int pnlW = getWidth();
-            int pnlH = getHeight();
             int imgW = m_image.getWidth(null);
             int imgH = m_image.getHeight(null);
             int imgX;
@@ -134,23 +142,14 @@ public abstract class JPCOutputPanel extends JPanel
             imgX = (pnlW - imgW) / 2;
             imgY = (pnlH - imgH) / 2;
             
-            //
-            // Draw panel
-            //
-            Graphics2D g2d = getAndConfigureGraphics2D(g);
+            // Draw output
+            drawEmulationOutput(g2d, imgX, imgY, imgW, imgH);
 
-            if(!isEmulationStopped()) {
-
-                drawEmulationOutput(g2d, imgX, imgY, imgW, imgH);
-
-                if(isDriveIndicatorLit())
-                    drawDriveIndicator(g2d, pnlW, pnlH);
-                
-                if(isStatisticVisible())
-                    drawStatistics(g2d, pnlW, pnlH);
-            }
-            
-            if(isEmulationPaused() || isEmulationStopped())
+            if(isDriveIndicatorLit())
+                drawDriveIndicator(g2d, pnlW, pnlH);
+            if(isStatisticVisible())
+                drawStatistics(g2d, pnlW, pnlH);
+            if(isEmulationPaused())
                 drawOverlay(g2d, pnlW, pnlH);
         }
     }
