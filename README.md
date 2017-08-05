@@ -53,6 +53,9 @@ As I have no interest in getting into any kind of copyright related issues, you 
  - Compile the project
  - Place et4000.bin and pcxtbios.bin (and optionally basicc11.bin) in the same directory as jPC.jar or put them in the respective folders at src/Hardware/ROM/ before you compile the project.
  
+### Compiled project
+ - You'll find the [compiled] project in the corresponding issues thread.
+ 
 ### Useful Tools
  - [WinImage], for manipulating floppy- and hard disk images.
  
@@ -72,3 +75,4 @@ Have fun.
 [et4000.bin]:https://www.google.com/?#q=%22et4000.bin%22!+file
 [basicc11.bin]:https://www.google.com/?#q=%22basicc11.bin%22!+file
 [pcxtbios.bin]:http://www.phatcode.net/downloads.php?id=101
+[compiled]:https://github.com/h0MER247/jPC/issues/3
