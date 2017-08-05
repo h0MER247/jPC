@@ -53,7 +53,7 @@ public final class IDIV8 extends Instruction {
         int quotient = dividend / src;
         int remainder = dividend % src;
         
-        if(quotient > 0x7f || quotient < -0x80)
+        if(quotient > 0x7f || quotient < -0x7f)
             throw new DivisionException();
         
         m_cpu.AH.setValue(remainder);

@@ -52,7 +52,7 @@ public final class IDIV16 extends Instruction {
         int quotient = dividend / src;
         int remainder = dividend % src;
         
-        if(quotient > 0x7fff || quotient < -0x8000)
+        if(quotient > 0x7fff || quotient < -0x7fff)
             throw new DivisionException();
         
         m_cpu.DX.setValue(remainder);

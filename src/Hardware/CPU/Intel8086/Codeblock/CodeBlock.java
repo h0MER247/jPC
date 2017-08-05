@@ -17,7 +17,6 @@
  */
 package Hardware.CPU.Intel8086.Codeblock;
 
-import Hardware.CPU.Intel8086.Exceptions.DivisionException;
 import Hardware.CPU.Intel8086.Exceptions.InterruptException;
 import Hardware.CPU.Intel8086.Instructions.Instruction;
 import Hardware.CPU.Intel8086.Intel8086;
@@ -98,10 +97,9 @@ public final class CodeBlock {
                 i++;
             }
         }
-        catch(DivisionException | InterruptException ex) {
+        catch(InterruptException ex) {
             
             m_cpu.IP.setValue(m_instructions[i].getCurrentIP());
-            
             throw ex;
         }
     }
