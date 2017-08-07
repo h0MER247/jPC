@@ -231,7 +231,8 @@ public final class JPCWindow extends JFrame {
     private void initEmulator() {
         
         m_emulator = new JPCEmulator(m_outputPanel);
-        addKeyListener(m_emulator.getKeyListener());
+        
+        addKeyListener(m_emulator.getKeyAdapter());
     }
     
     private void initConfiguration() {

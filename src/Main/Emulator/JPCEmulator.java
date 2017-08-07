@@ -24,7 +24,7 @@ import Hardware.HardwareComponent;
 import IOMap.IOMap;
 import Hardware.CPU.Intel8086.Intel8086;
 import Hardware.InterruptController.Intel8259;
-import Hardware.Keyboard.Keyboard;
+import Hardware.Keyboard.KeyboardXT;
 import MemoryMap.MemoryMap;
 import Hardware.Timer.Intel8253;
 import Hardware.PPI.Intel8255;
@@ -36,7 +36,6 @@ import Hardware.Video.VGA.TsengET4000.TsengET4000;
 import IOMap.IOMapped;
 import MemoryMap.MemoryMapped;
 import Scheduler.Schedulable;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +43,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.BiConsumer;
 import Hardware.Video.GraphicsCardListener;
+import java.awt.event.KeyAdapter;
 
 
 
@@ -78,7 +78,7 @@ public final class JPCEmulator {
     private final Scheduler m_scheduler;
     private final Int13Hook m_drives;
     private final Intel8086 m_cpu;
-    private final Keyboard m_keyboard;
+    private final KeyboardXT m_keyboard;
     private final TsengET4000 m_tsengET4000;
     private final Speaker m_speaker;
     
@@ -94,7 +94,7 @@ public final class JPCEmulator {
         m_components = new ArrayList<>();
         addComponent(m_cpu = new Intel8086(m_ioMap, m_memMap, m_scheduler));
         addComponent(m_tsengET4000 = new TsengET4000(gfxListener));
-        addComponent(m_keyboard = new Keyboard());
+        addComponent(m_keyboard = new KeyboardXT());
         addComponent(m_speaker = new Speaker());
         addComponent(new Intel8259());
         addComponent(new Intel8253());
@@ -236,7 +236,7 @@ public final class JPCEmulator {
     public void resetSoft() {
         
         if(m_state != JPCState.Stopped)
-            m_keyboard.pressCtrlAltDelete();
+            m_keyboard.sendCtrlAltDelete();
     }
     
     public void pause(boolean isPaused) {
@@ -295,9 +295,9 @@ public final class JPCEmulator {
         m_drives.eject(isHardDisk, driveIndex);
     }
     
-    public KeyListener getKeyListener() {
+    public KeyAdapter getKeyAdapter() {
         
-        return new JPCKeyMapper(m_keyboard);
+        return m_keyboard;
     }
     
     public JPCState getCurrentState() {
