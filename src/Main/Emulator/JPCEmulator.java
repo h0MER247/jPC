@@ -196,8 +196,8 @@ public final class JPCEmulator {
                     case Reset:
                         m_ioMap.reset();
                         m_memMap.reset();
-                        m_scheduler.reset();
                         m_components.forEach(c -> c.reset());
+                        m_scheduler.reset();
                         m_state = JPCState.Running;
                         break;
 
