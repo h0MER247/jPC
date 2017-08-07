@@ -31,6 +31,8 @@ import Hardware.PPI.Intel8255;
 import Hardware.SystemRAM.SystemRAM;
 import Scheduler.Scheduler;
 import Hardware.Int13Hook.Int13Hook;
+import Hardware.Mouse.SerialMouse;
+import Hardware.Serial.UART16450;
 import Hardware.Speaker.Speaker;
 import Hardware.Video.VGA.TsengET4000.TsengET4000;
 import IOMap.IOMapped;
@@ -44,6 +46,7 @@ import java.util.TimerTask;
 import java.util.function.BiConsumer;
 import Hardware.Video.GraphicsCardListener;
 import java.awt.event.KeyAdapter;
+import java.awt.event.MouseAdapter;
 
 
 
@@ -81,6 +84,7 @@ public final class JPCEmulator {
     private final KeyboardXT m_keyboard;
     private final TsengET4000 m_tsengET4000;
     private final Speaker m_speaker;
+    private final SerialMouse m_mouse;
     
     
     
@@ -96,6 +100,9 @@ public final class JPCEmulator {
         addComponent(m_tsengET4000 = new TsengET4000(gfxListener));
         addComponent(m_keyboard = new KeyboardXT());
         addComponent(m_speaker = new Speaker());
+        addComponent(m_mouse = new SerialMouse());
+        addComponent(new UART16450(1));
+        addComponent(new UART16450(2));
         addComponent(new Intel8259());
         addComponent(new Intel8253());
         addComponent(new Intel8255());
@@ -298,6 +305,11 @@ public final class JPCEmulator {
     public KeyAdapter getKeyAdapter() {
         
         return m_keyboard;
+    }
+    
+    public MouseAdapter getMouseAdapter() {
+        
+        return m_mouse;
     }
     
     public JPCState getCurrentState() {

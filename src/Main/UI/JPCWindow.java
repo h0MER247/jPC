@@ -233,6 +233,9 @@ public final class JPCWindow extends JFrame {
         m_emulator = new JPCEmulator(m_outputPanel);
         
         addKeyListener(m_emulator.getKeyAdapter());
+        addMouseListener(m_emulator.getMouseAdapter());
+        addMouseMotionListener(m_emulator.getMouseAdapter());
+        addMouseWheelListener(m_emulator.getMouseAdapter());
     }
     
     private void initConfiguration() {
