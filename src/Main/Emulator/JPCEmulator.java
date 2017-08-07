@@ -272,7 +272,7 @@ public final class JPCEmulator {
     
     public void setCPUFrequency(float frequency) {
         
-        m_scheduler.setBaseFrequency(frequency);
+        m_scheduler.setBaseFrequency(frequency, m_state == JPCState.Running);
     }
     
     public void setDriveIndicatorEnable(boolean isEnabled) {

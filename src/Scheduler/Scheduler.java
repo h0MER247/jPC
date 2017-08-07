@@ -89,6 +89,9 @@ public final class Scheduler {
         
         m_statisticTime = System.nanoTime();
         m_syncTime = System.nanoTime() + TIME_NEXT_SYNC_POINT_IN_NS;
+        
+        for(int i = 0; i < m_numDevices; i++)
+            m_devices[i].setBaseFrequency(m_baseFrequency);
     }
     
     // </editor-fold>
@@ -100,7 +103,6 @@ public final class Scheduler {
         if(m_numDevices == NUM_MAX_DEVICES)
             throw new IllegalArgumentException("There are too many devices registered");
         
-        device.setBaseFrequency(m_baseFrequency);
         m_devices[m_numDevices++] = device;
     }
     
@@ -108,7 +110,7 @@ public final class Scheduler {
     
     // <editor-fold defaultstate="collapsed" desc="Setting the base clock frequency">
     
-    public void setBaseFrequency(float baseFrequency) {
+    public void setBaseFrequency(float baseFrequency, boolean forceUpdate) {
         
         long fixedBaseFreq = Math.round((double)(baseFrequency * TO_FIXED_POINT));
         
@@ -116,8 +118,12 @@ public final class Scheduler {
         m_statisticCycles = fixedBaseFreq;
         
         m_baseFrequency = baseFrequency;
-        for(int i = 0; i < m_numDevices; i++)
-            m_devices[i].setBaseFrequency(baseFrequency);
+        
+        if(forceUpdate) {
+            
+            for(int i = 0; i < m_numDevices; i++)
+                m_devices[i].setBaseFrequency(baseFrequency);
+        }
     }
     
     // </editor-fold>
