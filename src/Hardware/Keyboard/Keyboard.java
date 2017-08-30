@@ -17,84 +17,11 @@
  */
 package Hardware.Keyboard;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.HashMap;
+import Hardware.HardwareComponent;
 
 
 
-public abstract class Keyboard<T> extends KeyAdapter {
+public interface Keyboard extends HardwareComponent {
     
-    /* ----------------------------------------------------- *
-     * Keyboard mappings                                     *
-     * ----------------------------------------------------- */
-    private final HashMap<Long, T> m_mapping;
-    
-    
-    
-    public Keyboard() {
-        
-        m_mapping = new HashMap<>();
-    }
-    
-    
-    
-    // <editor-fold defaultstate="collapsed" desc="Interface implementation of KeyAdapter">
-    
-    @Override
-    public void keyPressed(KeyEvent e) {
-        
-        handleKeyEvent(e, true);
-    }
-    
-    @Override
-    public void keyReleased(KeyEvent e) {
-        
-        handleKeyEvent(e, false);
-    }
-    
-    private void handleKeyEvent(KeyEvent e, boolean isPressed) {
-        
-        if(!e.isConsumed()) {
-            
-            T key = m_mapping.get(
-                    
-                getMappingValue(e.getExtendedKeyCode(), e.getKeyLocation())
-            );
-            if(key != null) {
-                
-                if(isPressed)
-                    onKeyDown(key);
-                else
-                    onKeyUp(key);
-                
-                e.consume();
-            }
-        }
-    }
-    
-    // </editor-fold>
-    
-    // <editor-fold defaultstate="collapsed" desc="Binding of virtual keycodes to keys of a specific keyboard">
-    
-    protected void setKeyMapping(int keyCode, int keyLocation, T key) {
-        
-        m_mapping.put(getMappingValue(keyCode, keyLocation), key);
-    }
-    
-    private long getMappingValue(int extendedKeyCode, int keyLocation) {
-        
-        return ((long)extendedKeyCode) | (((long)keyLocation) << 32);
-    }
-    
-    // </editor-fold>
-    // <editor-fold defaultstate="collapsed" desc="Abstract methods that specific keyboards have to implement">
-    
-    protected abstract void onKeyDown(T key);
-    protected abstract void onKeyUp(T key);
-    
-    public abstract void releaseAllKeys();
-    public abstract void sendCtrlAltDelete();
-    
-    // </editor-fold>
+    JPCKeyboardAdapter getAdapter();
 }
