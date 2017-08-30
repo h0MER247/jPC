@@ -25,15 +25,15 @@ import IOMap.IOWritable;
 
 
 /**
- * This is currently unused and incomplete because there is no propper floppy
- * disk controller or ide emulation implemented at the moment.
+ * This is currently incomplete and unused. This will change as soon as a
+ * propper floppy disk controller is implemented.
  * 
  * http://wiki.osdev.org/ISA_DMA
  * http://zet.aluzina.org/images/8/8c/Intel-8237-dma.pdf
  */
-public class Intel8237 implements HardwareComponent,
-                                  IOReadable,
-                                  IOWritable {
+public final class Intel8237 implements HardwareComponent,
+                                        IOReadable,
+                                        IOWritable {
     
     /* ----------------------------------------------------- *
      * Status register bitmasks                              *
@@ -148,8 +148,9 @@ public class Intel8237 implements HardwareComponent,
             case 0x82:
                 return m_page[3];
                 
+                
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - readIO8(), port %04xh", port));
+                throw new IllegalArgumentException(String.format("Illegal access while reading port %04xh", port));
         }
     }
     
@@ -253,8 +254,9 @@ public class Intel8237 implements HardwareComponent,
                 m_page[3] = data;
                 break;
                 
+                
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - writeIO8(), port %04xh, data %02xh", port, data));
+                throw new IllegalArgumentException(String.format("Illegal access while writing %02xh to port %04xh", data, port));
         }
     }
     

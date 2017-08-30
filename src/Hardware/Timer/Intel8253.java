@@ -20,7 +20,7 @@ package Hardware.Timer;
 import Hardware.HardwareComponent;
 import IOMap.IOReadable;
 import IOMap.IOWritable;
-import Hardware.InterruptController.Intel8259;
+import Hardware.InterruptController.PICs;
 import Hardware.Speaker.Speaker;
 import java.util.ArrayList;
 
@@ -59,18 +59,20 @@ public final class Intel8253 implements HardwareComponent,
     @Override
     public void wireWith(HardwareComponent component) {
         
-        if(component instanceof Intel8259) {
+
+        if(component instanceof PICs) {
             
-            final Intel8259 pic = (Intel8259)component;
+            final PICs pics = (PICs)component;
             m_counter[0].setOutputListener((newOut, oldOut) -> {
                 
                 if(!oldOut && newOut)
-                    pic.setInterrupt(0);
+                    pics.setInterrupt(0);
                 if(!newOut)
-                    pic.clearInterrupt(0);
+                    pics.clearInterrupt(0);
             });
         }
-        else if(component instanceof Speaker) {
+        
+        if(component instanceof Speaker) {
             
             final Speaker spkr = (Speaker)component;
             m_counter[2].setOutputListener((newOut, oldOut) -> {
@@ -115,8 +117,9 @@ public final class Intel8253 implements HardwareComponent,
             case 0x43:
                 return 0xff;
                 
+                
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - readIO8(), port %04xh", port));
+                throw new IllegalArgumentException(String.format("Illegal access while reading port %04xh", port));
         }
     }
     
@@ -145,8 +148,9 @@ public final class Intel8253 implements HardwareComponent,
                     m_counter[counterIdx].writeControl(data);
                 break;
                 
+                
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - writeIO8(), port %04xh, data %02xh", port, data));
+                throw new IllegalArgumentException(String.format("Illegal access while writing %02xh to port %04xh", data, port));
         }
     }
     

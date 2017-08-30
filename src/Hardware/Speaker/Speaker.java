@@ -18,6 +18,8 @@
 package Hardware.Speaker;
 
 import Hardware.HardwareComponent;
+import Main.Systems.ComponentConfig;
+import Main.Systems.ComponentConfig.Type;
 import Scheduler.Schedulable;
 import Scheduler.Scheduler;
 import javax.sound.sampled.AudioFormat;
@@ -28,8 +30,8 @@ import javax.sound.sampled.SourceDataLine;
 
 
 
-public class Speaker implements HardwareComponent,
-                                Schedulable {
+public final class Speaker implements HardwareComponent,
+                                      Schedulable {
     
     /* ----------------------------------------------------- *
      * Some constants                                        *
@@ -131,6 +133,19 @@ public class Speaker implements HardwareComponent,
             m_sdl.stop();
             m_sdl.close();
         }
+    }
+    
+    @Override
+    public String getConfigCategory() {
+        
+        return "Speaker";
+    }
+
+    @Override
+    public void provideConfigValues(ComponentConfig.Builder builder) {
+        
+        builder.value("Speaker enabled", "False", Type.ToggleValue, v -> { setEnable(Boolean.valueOf(v)); return true; })
+               .build();
     }
     
     // </editor-fold>
