@@ -1,14 +1,15 @@
-# jPC - A PC/XT Emulator written in Java
+# jPC - A PC Emulator written in Java
 
 ### Features
- - Emulation of the Intel 8086 CPU. Decoded instruction blocks get cached to speed up the emulation.
+ - Emulation of the Intel 8086 as well as the 80386 CPU. Decoded instruction blocks get cached to speed up the emulation.
  - Programmable Peripheral Interface i8255
  - Interrupt Controller i8259
  - Programmable Interval Timer i8253
  - UART 16450 (Serial port)
+ - Basic IDE emulation
  - Basic VGA emulation
  - PC Speaker output
- - Serial Mouse emulation
+ - Serial and PS/2 Mouse emulation
  
 ### Screenshots
 <p align="center">
@@ -40,20 +41,18 @@
 </p>
 
 ### Example Drive Image
- - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some shareware classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill, ...
+ - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some shareware classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill and others.
  
 ### Prerequisites
 As I have no interest in getting into any kind of copyright related issues, you have to provide the following ROM files yourself.
- - This project requires the Tseng ET4000 BIOS ROM<br />
+ - Tseng ET4000 BIOS ROM<br />
    (Required file: [et4000.bin])
- - This project requires the modified "Super PC/Turbo XT BIOS 3.0". The original IBM XT BIOS will not work on this emulator.<br />
-   (Required file: [pcxtbios.bin])
- - The IBM Basic C1.10 ROM however is optional<br />
+ - IBM Basic C1.10 ROM<br />
    (Optional file: [basicc11.bin])
    
 ### Starting
  - Compile the project
- - Place et4000.bin and pcxtbios.bin (and optionally basicc11.bin) in the same directory as jPC.jar or put them in the respective folders at src/Hardware/ROM/ before you compile the project.
+ - Place et4000.bin (and optionally basicc11.bin) in the same directory as jPC.jar or put them in the respective folders at src/Hardware/ROM/... before you compile the project.
  
 ### Compiled project
  - You'll find the [compiled] project in the corresponding issues thread.
@@ -61,12 +60,14 @@ As I have no interest in getting into any kind of copyright related issues, you 
 ### Useful Tools
  - [WinImage], for manipulating floppy- and hard disk images.
  
+### BIOS Roms
+This project uses the [Super PC/Turbo XT BIOS 3.0] rom as well as a self compiled version from the bochs bios that is made to run on 386 systems.
+ 
 ### Known Issues
-  - Most of the special registers and behaviors of the Tseng ET4000 graphics card aren't implemented at all at the moment.
-  - There is no FDC or IDE emulation at the moment. Floppy and hard drives get emulated through hooking of interrupt 13h. Software, that requires access to the FDC or IDE i/o-ports, will not function correctly (or even at all).
+  - Most of the special registers and behaviors of the Tseng ET4000 graphics card aren't implemented at all at the moment. Especially 16 and 24 bit color modes!
+  - There is no FDC emulation at the moment. That means no floppy disks can be mounted atm.
   - CLI and STI opcodes aren't implemented properly.
-  - I'm not entirely sure if the shift and rotate opcodes are implemented correctly for the 8086. I took the code for these opcodes from
-    my 80386 emulator. The 8086 handles these opcodes slightly different than a 80386 and I have no real hardware to test this atm.
+  - I'm still not entirely sure if the shift and rotate opcodes are implemented correctly for the 8086.
   
 Have fun.
 
