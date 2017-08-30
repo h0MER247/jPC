@@ -106,25 +106,28 @@ public abstract class ROM implements HardwareComponent,
                 // Read file
                 byte[] buffer = new byte[32768];
                 int offset = 0;
-                while(offset < length) {
-
+                
+                while(in.available() > 0) {
+                    
                     int n;
-                    if((n = in.read(buffer, 0, Math.min(length - offset, buffer.length))) <= 0)
-                        throw new IllegalStateException();
-
+                    if((n = in.read(buffer, 0, Math.min(Math.min(in.available(), buffer.length), m_data.length))) <= 0)
+                        throw new IllegalStateException("What happened?");
+                    
                     for(int i = 0; i < n; i++, offset++)
                         m_data[offset] = buffer[i] & 0xff;
 
                     if(md != null)
                         md.update(buffer, 0, n);
                 }
-
+                
                 // Check MD5
-                if(md != null && md5Hash != null) {
-
+                if(md != null) {
+                    
                     String computedHash = DatatypeConverter.printHexBinary(md.digest());
-                    if(!md5Hash.equals(computedHash))
+                    if(md5Hash != null && !md5Hash.equals(computedHash))
                         throw new IllegalArgumentException("The calculated MD5 hash doesn't match the expected value");
+                    
+                    //System.out.printf("%s: %s\n", resource, computedHash);
                 }
             }
             catch(IOException ex) {
@@ -158,6 +161,15 @@ public abstract class ROM implements HardwareComponent,
         
         return m_data[address] |
               (m_data[address + 1] << 8);
+    }
+    
+    @Override
+    public int readMEM32(int address) {
+        
+        return m_data[address] |
+              (m_data[address + 1] << 8) |
+              (m_data[address + 2] << 16) |
+              (m_data[address + 3] << 24);
     }
     
     // </editor-fold>

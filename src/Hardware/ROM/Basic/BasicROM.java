@@ -21,7 +21,7 @@ import Hardware.ROM.ROM;
 
 
 
-public class BasicROM extends ROM {
+public final class BasicROM extends ROM {
     
     public BasicROM() {
         
