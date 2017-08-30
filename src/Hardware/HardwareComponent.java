@@ -17,6 +17,7 @@
  */
 package Hardware;
 
+import Main.Systems.ComponentConfig;
 import java.util.ArrayList;
 
 
@@ -27,6 +28,8 @@ public interface HardwareComponent {
     default void reset() {}
     default void shutdown() {}
     default void wireWith(HardwareComponent component) {}
+    default String getConfigCategory() { return ""; }
+    default void provideConfigValues(ComponentConfig.Builder builder) { }
     
     default ArrayList<HardwareComponent> getSubComponents() {
         
