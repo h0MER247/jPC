@@ -120,40 +120,38 @@ public final class Decoder {
         m_buffer = new ArrayList<>(4096);
         
         // Initialize 16 bit register references
-        m_regs16 = new Reg16[] { m_cpu.AX,
-                                 m_cpu.CX,
-                                 m_cpu.DX,
-                                 m_cpu.BX,
-                                 m_cpu.SP,
-                                 m_cpu.BP,
-                                 m_cpu.SI,
-                                 m_cpu.DI };
+        m_regs16 = new Reg16[] {
+            
+            m_cpu.AX, m_cpu.CX,
+            m_cpu.DX, m_cpu.BX,
+            m_cpu.SP, m_cpu.BP,
+            m_cpu.SI, m_cpu.DI
+        };
         
         // Initialize 8 bit register references
-        m_regs8 = new Reg8[] { m_cpu.AL,
-                               m_cpu.CL,
-                               m_cpu.DL,
-                               m_cpu.BL,
-                               m_cpu.AH,
-                               m_cpu.CH,
-                               m_cpu.DH,
-                               m_cpu.BH };
+        m_regs8 = new Reg8[] {
+            
+            m_cpu.AL, m_cpu.CL,
+            m_cpu.DL, m_cpu.BL,
+            m_cpu.AH, m_cpu.CH,
+            m_cpu.DH, m_cpu.BH
+        };
         
         // Initialize segment register references
-        m_segs = new Segment[] { m_cpu.ES,
-                                 m_cpu.CS,
-                                 m_cpu.SS,
-                                 m_cpu.DS };
+        m_segs = new Segment[] {
+            
+            m_cpu.ES, m_cpu.CS,
+            m_cpu.SS, m_cpu.DS
+        };
         
         // Initialize segment register references for memory pointers
-        m_segsMemPtr = new Segment[] { m_cpu.DS,
-                                       m_cpu.DS,
-                                       m_cpu.SS,
-                                       m_cpu.SS,
-                                       m_cpu.DS,
-                                       m_cpu.DS,
-                                       m_cpu.SS,
-                                       m_cpu.DS };
+        m_segsMemPtr = new Segment[] {
+            
+            m_cpu.DS, m_cpu.DS,
+            m_cpu.SS, m_cpu.SS,
+            m_cpu.DS, m_cpu.DS,
+            m_cpu.SS, m_cpu.DS
+        };
         
         // <editor-fold defaultstate="collapsed" desc="Decoder table initialization">
         
@@ -2880,7 +2878,7 @@ public final class Decoder {
     // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Decoding of a codeblock at a given start address">
     
-    public CodeBlock decodeCodeBlock(int base, int offset) throws DecoderException {
+    public CodeBlock decodeCodeBlock(int base, int offset) {
         
         Instruction instr;
         int instrOffset;

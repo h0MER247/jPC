@@ -17,6 +17,7 @@
  */
 package Hardware.CPU.Intel8086;
 
+import Hardware.CPU.CPU;
 import Hardware.HardwareComponent;
 import IOMap.IOMap;
 import Hardware.CPU.Intel8086.Codeblock.CodeBlock;
@@ -24,7 +25,8 @@ import Hardware.CPU.Intel8086.Decoder.Decoder;
 import Hardware.CPU.Intel8086.Exceptions.*;
 import Hardware.CPU.Intel8086.Register.*;
 import Hardware.CPU.Intel8086.Segments.Segment;
-import Hardware.InterruptController.Intel8259;
+import Hardware.InterruptController.PICs;
+import Main.Systems.ComponentConfig;
 import MemoryMap.MemoryMap;
 import Scheduler.Scheduler;
 import java.util.Arrays;
@@ -34,7 +36,8 @@ import java.util.Map.Entry;
 
 
 
-public final class Intel8086 implements HardwareComponent {
+public final class Intel8086 implements HardwareComponent,
+                                        CPU {
     
     /* ----------------------------------------------------- *
      * Intel 8086 register set                               *
@@ -68,11 +71,6 @@ public final class Intel8086 implements HardwareComponent {
     private CodeBlock m_currentBlock;
     
     /* ----------------------------------------------------- *
-     * Interrupt hooks                                       *
-     * ----------------------------------------------------- */
-    private final InterruptHook[] m_hooks;
-    
-    /* ----------------------------------------------------- *
      * Reference to the i/o map and interrupt controller     *
      * ----------------------------------------------------- */
     private final IOMap m_ioMap;
@@ -82,7 +80,7 @@ public final class Intel8086 implements HardwareComponent {
     /* ----------------------------------------------------- *
      * Reference to the interrupt controller                 *
      * ----------------------------------------------------- */
-    private Intel8259 m_pic;
+    private PICs m_pic;
     
     
     
@@ -124,9 +122,6 @@ public final class Intel8086 implements HardwareComponent {
         m_integerLUT = new Integer[0x1000];
         for(int i = 0; i < m_integerLUT.length; i++)
             m_integerLUT[i] = i;
-        
-        // Initialize interrupt hooks
-        m_hooks = new InterruptHook[256];
     }
     
     
@@ -159,17 +154,41 @@ public final class Intel8086 implements HardwareComponent {
     @Override
     public void wireWith(HardwareComponent component) {
         
-        if(component instanceof Intel8259)
-            m_pic = (Intel8259)component;
+        if(component instanceof PICs)
+            m_pic = (PICs)component;
+    }
+    
+    @Override
+    public String getConfigCategory() {
+        
+        return "CPU";
+    }
+
+    @Override
+    public void provideConfigValues(ComponentConfig.Builder builder) {
+        
+        builder.value("Frequency", "16000000", ComponentConfig.Type.ToggleGroup, this::setFrequency)
+               .option("4.77 MHz", "4772727")
+               .option("8 MHz", "8000000")
+               .option("10 MHz", "10000000")
+               .option("12 MHz", "12000000")
+               .option("16 MHz", "16000000")
+               .build();
+    }
+    
+    private boolean setFrequency(String value) {
+        
+        m_scheduler.setBaseFrequency(Float.valueOf(value), true);
+        return true;
     }
     
     // </editor-fold>
+    // <editor-fold defaultstate="collapsed" desc="Interface implementation of CPU">
     
-    // <editor-fold defaultstate="collapsed" desc="Main method where code blocks get executed">
-    
-    public void run(int loopCount) {
+    @Override
+    public void run(int numBlocks) {
             
-        while(loopCount-- > 0) {
+        while(numBlocks-- > 0) {
 
             if(isInterruptPending()) {
 
@@ -211,14 +230,14 @@ public final class Intel8086 implements HardwareComponent {
         }
     }
     
-    // </editor-fold>
-    // <editor-fold defaultstate="collapsed" desc="Interrupt handling">
-    
-    public void setInterruptHook(InterruptHook hook) {
+    public void updateClock(int cycles) {
         
-        for(int vec : hook.getHandledInterrupts())
-            m_hooks[vec] = hook;
+        m_scheduler.updateClock(cycles);
     }
+        
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Interrupt handling">
     
     public boolean isInterruptPending() {
         
@@ -226,12 +245,6 @@ public final class Intel8086 implements HardwareComponent {
     }
     
     public void handleInterrupt(int number, boolean clearIFlag) {
-        
-        if(m_hooks[number] != null) {
-            
-            if(m_hooks[number].handleInterrupt(this, number))
-                return;
-        }
         
         // Push return address and flags
         pushStack(FLAGS.getValue());
@@ -415,14 +428,6 @@ public final class Intel8086 implements HardwareComponent {
     }
     
     // </editor-fold>
-    // <editor-fold defaultstate="collapsed" desc="Method for scheduler access">
-    
-    public void updateClock(int cycles) {
-        
-        m_scheduler.updateClock(cycles);
-    }
-    
-    // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Dump of the current cpu state">
     
@@ -453,7 +458,7 @@ public final class Intel8086 implements HardwareComponent {
             FLAGS.getValue(),
             FLAGS.toString()
         );
-        String block = m_currentBlock.toString();
+        String block = m_currentBlock != null ? m_currentBlock.toString() : "No information";
         
         return "CPU State:\n" + regs + "\n" + segs + "\n" + flags + "\n\n" + "Dump of the current code block:\n" + block;
     }

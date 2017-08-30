@@ -19,4 +19,4 @@ package Hardware.CPU.Intel8086.Exceptions;
 
 
 
-public final class DivisionException extends IllegalArgumentException { }
+public final class DivisionException extends RuntimeException { }

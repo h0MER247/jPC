@@ -28,7 +28,7 @@ public final class CodeBlock {
     /* ----------------------------------------------------- *
      * Address of this codeblock                             *
      * ----------------------------------------------------- */
-    private final int m_baseSelector;
+    private final int m_cs;
     private final int m_paragraphStart;
     private final int m_paragraphEnd;
     
@@ -58,7 +58,7 @@ public final class CodeBlock {
         
         m_cpu = cpu;
         
-        m_baseSelector = base >>> 4;
+        m_cs = base >>> 4;
         m_paragraphStart = (base + offsetStart) & 0xffff0;
         m_paragraphEnd = (base + offsetEnd) & 0xffff0;
         
@@ -116,7 +116,7 @@ public final class CodeBlock {
         
         String res = "";
         for(Instruction i : m_instructions)
-            res += String.format("%04x:%04x %s\n", m_baseSelector, i.getCurrentIP(), i.toString());
+            res += String.format("%04x:%04x %s\n", m_cs, i.getCurrentIP(), i.toString());
         
         return res;
     }
