@@ -26,6 +26,7 @@ import javax.swing.JMenuItem;
 
 public final class JPCMenuEmulation extends JMenu {
     
+    private final JPCMenuSystemSelection m_system;
     private final JMenuItem m_run;
     private final JMenuItem m_reset;
     private final JMenuItem m_pause;
@@ -41,6 +42,7 @@ public final class JPCMenuEmulation extends JMenu {
         
         super("Emulation");
         
+        add(m_system = new JPCMenuSystemSelection());
         add(m_run = new JCheckBoxMenuItem("Run"));
         add(m_reset = new JMenuItem("Reset"));
         add(m_pause = new JCheckBoxMenuItem("Pause"));
@@ -53,11 +55,21 @@ public final class JPCMenuEmulation extends JMenu {
         addSeparator();
         add(m_exit = new JMenuItem("Exit"));
         
-        m_reset.setEnabled(false);
-        m_pause.setEnabled(false);
-        m_statistic.setEnabled(false);
-        m_sendCtrlAltDelete.setEnabled(false);
-        m_screenshot.setEnabled(false);
+        setSystemEnabled(true);
+        setRunEnabled(false);
+        setResetEnabled(false);
+        setPauseEnabled(false);
+        setCtrlAltDeleteEnabled(false);
+        setScreenshotEnabled(false);
+        setStatisticEnabled(false);
+        setFullscreenEnabled(false);
+    }
+    
+    
+    
+    public JPCMenuSystemSelection getSystemSelectionMenu() {
+        
+        return m_system;
     }
     
     
@@ -121,6 +133,23 @@ public final class JPCMenuEmulation extends JMenu {
     
     
     
+    public boolean isPauseSelected() {
+        
+        return m_pause.isSelected();
+    }
+    
+    
+    
+    public void setSystemEnabled(boolean isEnabled) {
+    
+        m_system.setEnabled(isEnabled);
+    }
+    
+    public void setRunEnabled(boolean isEnabled) {
+        
+        m_run.setEnabled(isEnabled);
+    }
+    
     public void setResetEnabled(boolean isEnabled) {
         
         m_reset.setEnabled(isEnabled);
@@ -131,11 +160,6 @@ public final class JPCMenuEmulation extends JMenu {
         m_pause.setEnabled(isEnabled);
     }
     
-    public void setStatisticEnabled(boolean isEnabled) {
-        
-        m_statistic.setEnabled(isEnabled);
-    }
-    
     public void setCtrlAltDeleteEnabled(boolean isEnabled) {
         
         m_sendCtrlAltDelete.setEnabled(isEnabled);
@@ -144,5 +168,15 @@ public final class JPCMenuEmulation extends JMenu {
     public void setScreenshotEnabled(boolean isEnabled) {
         
         m_screenshot.setEnabled(isEnabled);
+    }
+    
+    public void setStatisticEnabled(boolean isEnabled) {
+        
+        m_statistic.setEnabled(isEnabled);
+    }
+    
+    public void setFullscreenEnabled(boolean isEnabled) {
+        
+        m_fullscreen.setEnabled(isEnabled);
     }
 }

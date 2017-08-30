@@ -17,18 +17,21 @@
  */
 package Main.UI;
 
-import Utility.EmptyFileCreator;
-import Main.Emulator.JPCEmulator;
-import Main.Emulator.JPCEmulator.JPCState;
-import Main.UI.MenuBar.JPCMenuBar;
 import Main.UI.OutputPanel.JPCOutputPanel;
-import Main.UI.OutputPanel.JPCOutputPanel.QualitySettings;
+import Main.UI.MenuBar.JPCMenuBar;
+import Main.Systems.AT386System;
+import Main.Systems.JPCSystem;
+import Main.Systems.XTSystem;
+import Main.UI.Configuration.ToggleMenuItem;
+import Main.UI.Configuration.FileMenuItem;
+import Main.UI.Configuration.GroupMenuItem;
+import Main.UI.MenuBar.JPCMenuEmulation;
+import Main.UI.MenuBar.JPCMenuSystemSelection;
+import Utility.MouseGrabber;
 import Utility.SwingDialogs;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.FocusAdapter;
@@ -37,12 +40,12 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.prefs.Preferences;
+import java.util.ArrayList;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
 import javax.swing.filechooser.FileSystemView;
 
 
@@ -50,21 +53,10 @@ import javax.swing.filechooser.FileSystemView;
 public final class JPCWindow extends JFrame {
     
     /* ----------------------------------------------------- *
-     * Emulator configuration                                *
-     * ----------------------------------------------------- */
-    public static final String CONFIG_CPU_FREQUENCY = "cpu.frequency";
-    public static final String CONFIG_DRIVE_INDICATOR_ENABLE = "drive.indicatorEnable";
-    public static final String CONFIG_DRIVE_FDD = "drive.fdd";
-    public static final String CONFIG_DRIVE_HDD = "drive.hdd";
-    public static final String CONFIG_SPEAKER_ENABLE = "speaker.enable";
-    private Preferences m_configuration;
-    
-    /* ----------------------------------------------------- *
      * UI components                                         *
      * ----------------------------------------------------- */
     private JPCMenuBar m_menuBar;
     private JPCOutputPanel m_outputPanel;
-    private JPCEmulator m_emulator;
     
     /* ----------------------------------------------------- *
      * Fullscreen / Windowed application handling            *
@@ -74,9 +66,15 @@ public final class JPCWindow extends JFrame {
     private boolean m_isFullscreenEnabled;
     
     /* ----------------------------------------------------- *
-     * Statistics                                            *
+     * Mouse grabber                                         *
      * ----------------------------------------------------- */
-    private boolean m_isStatisticVisible;
+    private MouseGrabber m_mouseGrabber;
+    
+    /* ----------------------------------------------------- *
+     * Reference to the emulated system                      *
+     * ----------------------------------------------------- */
+    private final ArrayList<JMenu> m_systemMenus;
+    private JPCSystem m_system;
     
     
     
@@ -99,23 +97,29 @@ public final class JPCWindow extends JFrame {
             @Override
             public void focusLost(FocusEvent fe) {
                 
-                m_emulator.releaseAllKeys();
+                if(m_system != null)
+                    m_system.getKeyAdapter().releaseAllKeys();
             }
         });
         
         try {
             
             initFullscreenKeyAccelerator();
-            initMenuBar();
             initOutputPanel(width, height);
-            initEmulator();
-            initConfiguration();
+            initMenuBar();
         }
         catch(IllegalArgumentException ex) {
             
             SwingDialogs.showExceptionMessage("Initialization of jPC failed", ex);
             onExit();
         }
+        
+        // Init mouse grabber
+        m_mouseGrabber = new MouseGrabber(this, this::onUpdateTitle);
+        
+        // This holds the JMenus which are created for the purpose of
+        // configuring the system
+        m_systemMenus = new ArrayList<>();
         
         // Center the window on the screen
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
@@ -157,70 +161,27 @@ public final class JPCWindow extends JFrame {
         setJMenuBar(m_menuBar = new JPCMenuBar());
         
         // Emulation
-        m_menuBar.getEmulationMenu().addOnRunHandler(this::onRun);
-        m_menuBar.getEmulationMenu().addOnResetHandler(this::onResetHard);
-        m_menuBar.getEmulationMenu().addOnPauseHandler(this::onPause);
-        m_menuBar.getEmulationMenu().addOnStatisticHandler(this::onSetStatisticEnable);
-        m_menuBar.getEmulationMenu().addOnFullscreenHandler(this::onToggleFullscreen);
-        m_menuBar.getEmulationMenu().addOnExitHandler(this::onExit);
-        m_menuBar.getEmulationMenu().addOnCtrlAltDeleteHandler(this::onResetSoft);
-        m_menuBar.getEmulationMenu().addOnScreenshotHandler(this::onTakeScreenshot);
+        JPCMenuEmulation emulationMenu = m_menuBar.getEmulationMenu();
+        emulationMenu.addOnRunHandler(this::onRun);
+        emulationMenu.addOnResetHandler(this::onResetHard);
+        emulationMenu.addOnPauseHandler(this::onPause);
+        emulationMenu.addOnStatisticHandler(this::onSetStatisticEnable);
+        emulationMenu.addOnFullscreenHandler(this::onToggleFullscreen);
+        emulationMenu.addOnExitHandler(this::onExit);
+        emulationMenu.addOnCtrlAltDeleteHandler(this::onResetSoft);
+        emulationMenu.addOnScreenshotHandler(this::onTakeScreenshot);
         
-        // CPU
-        m_menuBar.getCPUMenu().addOnFrequencyHandler(this::onSetCPUFrequency);
+        // System selection menu
+        JPCMenuSystemSelection systemMenu = emulationMenu.getSystemSelectionMenu();
+        systemMenu.addSystemHandler(XTSystem.SYSTEM_NAME, () -> initSystem(new XTSystem(m_outputPanel)));
+        systemMenu.addSystemHandler(AT386System.SYSTEM_NAME, () -> initSystem(new AT386System(m_outputPanel)));
         
-        // Drives
-        m_menuBar.getDrivesMenu().addOnIndicatorHandler(this::onSetDriveIndicatorEnable);
-        m_menuBar.getDrivesMenu().addOnFDDSelectHandler(driveIndex -> onChooseDiskImage(false, driveIndex));
-        m_menuBar.getDrivesMenu().addOnFDDEjectHandler(driveIndex -> onEjectDiskImage(false, driveIndex));
-        m_menuBar.getDrivesMenu().addOnHDDSelectHandler(driveIndex -> onChooseDiskImage(true, driveIndex));
-        m_menuBar.getDrivesMenu().addOnHDDEjectHandler(driveIndex -> onEjectDiskImage(true, driveIndex));
-        m_menuBar.getDrivesMenu().addOnHDDCreateHandler(driveIndex -> onCreateHDDImage(driveIndex));
-        
-        // Speaker
-        m_menuBar.getSpeakerMenu().addOnEnableHandler(this::onSetSpeakerEnable);
+        m_menuBar.updateUI();
     }
     
     private void initOutputPanel(int width, int height) {
         
-        m_outputPanel = new JPCOutputPanel(QualitySettings.HighQuality){
-            
-            @Override
-            public boolean isEmulationStopped() {
-                
-                return m_emulator.getCurrentState() == JPCState.Stopped;
-            }
-            
-            @Override
-            public boolean isEmulationPaused() {
-                
-                return m_emulator.getCurrentState() == JPCState.Paused;
-            }
-            
-            @Override
-            public boolean isStatisticVisible() {
-                
-                return m_isStatisticVisible;
-            }
-            
-            @Override
-            public boolean isFullscreenEnabled() {
-                
-                return m_isFullscreenEnabled;
-            }
-            
-            @Override
-            public boolean isDriveIndicatorLit() {
-                
-                return m_emulator.isDriveIndicatorLit();
-            }
-            
-            @Override
-            public String getStatisticData() {
-                
-                return m_emulator.getStatisticData();
-            }
-        };
+        m_outputPanel = new JPCOutputPanel();
         m_outputPanel.setBackground(Color.black);
         m_outputPanel.setDoubleBuffered(true);
         m_outputPanel.setPreferredSize(new Dimension(width, height));
@@ -228,28 +189,63 @@ public final class JPCWindow extends JFrame {
         add(m_outputPanel, BorderLayout.CENTER);
     }
     
-    private void initEmulator() {
+    private void initSystem(JPCSystem system) {
         
-        m_emulator = new JPCEmulator(m_outputPanel);
+        if(m_system != null) {
+
+            // Remove old keyboard and mouse listener
+            removeKeyListener(m_system.getKeyAdapter());
+            removeMouseListener(m_system.getMouseAdapter());
+            removeMouseMotionListener(m_system.getMouseAdapter());
+            removeMouseWheelListener(m_system.getMouseAdapter());
         
-        addKeyListener(m_emulator.getKeyAdapter());
-        addMouseListener(m_emulator.getMouseAdapter());
-        addMouseMotionListener(m_emulator.getMouseAdapter());
-        addMouseWheelListener(m_emulator.getMouseAdapter());
-    }
-    
-    private void initConfiguration() {
+            // Also remove the configuration menus
+            m_systemMenus.forEach(menu -> m_menuBar.remove(menu));
+            m_systemMenus.clear();
+        }
         
-        m_configuration = Preferences.userRoot().node("jPC");
+        // Initialize keyboard and mouse listener
+        addKeyListener(system.getKeyAdapter());
+        addMouseListener(system.getMouseAdapter());
+        addMouseMotionListener(system.getMouseAdapter());
+        addMouseWheelListener(system.getMouseAdapter());
         
-        onSetCPUFrequency(m_configuration.getFloat(CONFIG_CPU_FREQUENCY, 16000000.0f));
-        onSetDriveIndicatorEnable(m_configuration.getBoolean(CONFIG_DRIVE_INDICATOR_ENABLE, false));
-        onSetSpeakerEnable(m_configuration.getBoolean(CONFIG_SPEAKER_ENABLE, true));
+        // Initialize configuration menus
+        system.forEachConfiguration((category, configList) -> {
+            
+            JMenu menu = new JMenu(category);
+            configList.forEach(config -> {
+
+                switch(config.getType()) {
+
+                    case ToggleValue:
+                        menu.add(new ToggleMenuItem(config, this::isSystemResetOkay));
+                        break;
+
+                    case FileValue:
+                        menu.add(new FileMenuItem(config, this::isSystemResetOkay));
+                        break;
+
+                    case ToggleGroup:
+                        menu.add(new GroupMenuItem(config, this::isSystemResetOkay));
+                        break;
+                }
+            });
+
+            m_systemMenus.add(menu);
+            m_menuBar.add(menu);
+        });
+        system.configure();
         
-        for(int i = 0; i < 2; i++)
-            setDiskImage(false, i, new File(m_configuration.get(CONFIG_DRIVE_FDD + String.valueOf(i), "")));
-        for(int i = 0; i < 4; i++)
-            setDiskImage(true, i, new File(m_configuration.get(CONFIG_DRIVE_HDD + String.valueOf(i), "")));
+        // Setup output panel
+        m_outputPanel.setSystem(system);
+        
+        // Done
+        m_system = system;
+        m_menuBar.getEmulationMenu().setRunEnabled(true);
+        m_menuBar.updateUI();
+        
+        onUpdateTitle();
     }
     
     // </editor-fold>
@@ -258,59 +254,54 @@ public final class JPCWindow extends JFrame {
     private void onRun(boolean isRunning) {
         
         if(isRunning)
-            m_emulator.run(this::onEmulatorException);
+            m_system.run(this::onEmulatorException);
         else
-            m_emulator.stop();
+            m_system.stop();
         
+        m_menuBar.getEmulationMenu().setSystemEnabled(!isRunning);
         m_menuBar.getEmulationMenu().setPauseSelected(false);
         m_menuBar.getEmulationMenu().setPauseEnabled(isRunning);
         m_menuBar.getEmulationMenu().setResetEnabled(isRunning);
         m_menuBar.getEmulationMenu().setStatisticEnabled(isRunning);
         m_menuBar.getEmulationMenu().setCtrlAltDeleteEnabled(isRunning);
         m_menuBar.getEmulationMenu().setScreenshotEnabled(isRunning);
-        
-        repaint();
+        m_menuBar.getEmulationMenu().setFullscreenEnabled(isRunning);
     }
     
-    private void onEmulatorException(Exception ex, String cpuDump) {
+    private void onEmulatorException(Exception ex) {
         
-        EventQueue.invokeLater(() -> { 
-            
-            m_menuBar.getEmulationMenu().setRunSelected(false);
-            m_menuBar.getEmulationMenu().setPauseSelected(false);
-            m_menuBar.getEmulationMenu().setPauseEnabled(false);
-            m_menuBar.getEmulationMenu().setResetEnabled(false);
-            m_menuBar.getEmulationMenu().setStatisticEnabled(false);
-            m_menuBar.getEmulationMenu().setCtrlAltDeleteEnabled(false);
-            m_menuBar.getEmulationMenu().setScreenshotEnabled(false);
-            
-            SwingDialogs.showExceptionMessage("jPC died", ex, cpuDump);
-            repaint();
-        });
+        m_menuBar.getEmulationMenu().setSystemEnabled(true);
+        m_menuBar.getEmulationMenu().setRunSelected(false);
+        m_menuBar.getEmulationMenu().setPauseSelected(false);
+        m_menuBar.getEmulationMenu().setPauseEnabled(false);
+        m_menuBar.getEmulationMenu().setResetEnabled(false);
+        m_menuBar.getEmulationMenu().setStatisticEnabled(false);
+        m_menuBar.getEmulationMenu().setCtrlAltDeleteEnabled(false);
+        m_menuBar.getEmulationMenu().setFullscreenEnabled(false);
+        m_menuBar.getEmulationMenu().setScreenshotEnabled(false);
+        
+        SwingDialogs.showExceptionMessage("jPC died", ex);
+        ex.printStackTrace(System.err);
     }
     
     private void onResetHard() {
         
-        m_emulator.resetHard();
-        repaint();
+        m_system.reset();
     }
     
     private void onPause(boolean isPaused) {
         
-        m_emulator.pause(isPaused);
-        repaint();
+        m_system.pause(isPaused);
     }
     
     private void onResetSoft() {
         
-        m_emulator.resetSoft();
-        repaint();
+        m_system.getKeyAdapter().sendCtrlAltDelete();
     }
     
-    private void onSetStatisticEnable(boolean isVisible) {
+    private void onSetStatisticEnable(boolean isEnabled) {
         
-        m_isStatisticVisible = isVisible;
-        repaint();
+        m_outputPanel.setStatisticEnabled(isEnabled);
     }
     
     private void onToggleFullscreen() {
@@ -326,9 +317,6 @@ public final class JPCWindow extends JFrame {
             m_windowedPosition = getLocation();
             setUndecorated(true);
             setExtendedState(JFrame.MAXIMIZED_BOTH);
-            setCursor(getToolkit().createCustomCursor(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB),
-                                                      new Point(),
-                                                      null));
         }
         else {
 
@@ -337,139 +325,19 @@ public final class JPCWindow extends JFrame {
             setLocation(m_windowedPosition);
             setUndecorated(false);
             setExtendedState(JFrame.NORMAL);
-            setCursor(Cursor.getDefaultCursor());
         }
         setVisible(true);
     }
     
     private void onExit() {
         
+        if(m_system != null)
+            m_system.stop();
+        
         setVisible(false);
-        
-        if(m_emulator != null) {
-            
-            if(m_emulator.getCurrentState() != JPCState.Stopped) {
-                
-                m_emulator.stop();
-                m_emulator.shutdown();
-            }
-        }
-        
         dispose();
+        
         System.exit(0);
-    }
-    
-    private void onSetCPUFrequency(float frequency) {
-        
-        m_emulator.setCPUFrequency(frequency);
-        m_configuration.putFloat(CONFIG_CPU_FREQUENCY, frequency);
-        m_menuBar.getCPUMenu().setFrequencySelected(frequency);
-    }
-    
-    private void onSetDriveIndicatorEnable(boolean isEnabled) {
-        
-        m_emulator.setDriveIndicatorEnable(isEnabled);
-        m_configuration.putBoolean(CONFIG_DRIVE_INDICATOR_ENABLE, isEnabled);
-        m_menuBar.getDrivesMenu().setEnableIndicatorSelected(isEnabled);
-    }
-    
-    private void onSetSpeakerEnable(boolean isEnabled) {
-        
-        m_emulator.setSpeakerEnable(isEnabled);
-        m_configuration.putBoolean(CONFIG_SPEAKER_ENABLE, isEnabled);
-        m_menuBar.getSpeakerMenu().setEnableSpeakerSelected(isEnabled);
-    }
-    
-    private void onChooseDiskImage(boolean isHardDisk, int driveIndex) {
-        
-        File file = SwingDialogs.showFileChooser("Choose disk image", true);
-        if(file != null)
-            setDiskImage(isHardDisk, driveIndex, file);
-    }
-    
-    private void onEjectDiskImage(boolean isHardDisk, int driveIndex) {
-        
-        setDiskImage(isHardDisk, driveIndex, new File(""));
-    }
-    
-    private void setDiskImage(boolean isHardDisk, int driveIndex, File file) {
-        
-        // TODO: Clean this mess up
-        
-        if(m_emulator.getCurrentState() == JPCState.Stopped || !isHardDisk ||
-           SwingDialogs.showConfirmationMessage("Attention", "This will reset jPC. Do you want to continue?")) {
-            
-            try {
-                
-                if(file.exists()) {
-                    
-                    m_emulator.loadDiskImage(isHardDisk, driveIndex, file);
-                }
-                else {
-                    
-                    file = new File(""); // <- This is just here in case the file doesn't exist (anymore)
-                    m_emulator.ejectDiskImage(isHardDisk, driveIndex);    
-                }
-            }
-            catch(IOException ex) {
-
-                file = new File("");
-
-                SwingDialogs.showInformationMessage("Image file could not be loaded", ex.getMessage());
-            }
-
-            m_configuration.put((isHardDisk ? CONFIG_DRIVE_HDD : CONFIG_DRIVE_FDD) + String.valueOf(driveIndex), file.toString());
-            
-            if(isHardDisk) {
-                
-                m_menuBar.getDrivesMenu().setHDDImageName(driveIndex, file.getName());
-                onResetHard();
-            }
-            else {
-                
-                m_menuBar.getDrivesMenu().setFDDImageName(driveIndex, file.getName());
-            }
-        }
-    }
-    
-    private void onCreateHDDImage(int driveIndex) {
-        
-        EmptyFileCreator res = (EmptyFileCreator)SwingDialogs.showInputDialog(
-                
-            "Disk size",
-            "Choose the size of the hard disk:",
-            new EmptyFileCreator[] {
-
-                new EmptyFileCreator(16 * 1024 * 1024),
-                new EmptyFileCreator(32 * 1024 * 1024),
-                new EmptyFileCreator(64 * 1024 * 1024),
-                new EmptyFileCreator(128 * 1024 * 1024),
-                new EmptyFileCreator(256 * 1024 * 1024),
-                new EmptyFileCreator(512 * 1024 * 1024)
-            },
-            3
-        );
-        
-        try {
-            
-            if(res != null) {
-
-                File file = SwingDialogs.showFileChooser("Save image as", false);
-                if(file != null) {
-
-                    if(!file.exists() || SwingDialogs.showConfirmationMessage("File already exists",
-                                                                              "This will overwrite the file. Do you want to continue?")) {
-                        
-                        res.write(file);
-                        setDiskImage(true, driveIndex, file);
-                    }
-                }
-            }
-        }
-        catch(IOException ex) {
-            
-            SwingDialogs.showExceptionMessage("Error occured", ex);
-        }
     }
     
     private void onTakeScreenshot() {
@@ -488,8 +356,64 @@ public final class JPCWindow extends JFrame {
         }
         catch(IOException ex) {
             
-            SwingDialogs.showExceptionMessage("Screenshot couldn't be stored", ex);
+            SwingDialogs.showExceptionMessage("Your screenshot can't be saved", ex);
         }
+    }
+    
+    // </editor-fold>
+    // <editor-fold defaultstate="collapsed" desc="Reset message and JFrame title updating">
+    
+    private boolean isSystemResetOkay() {
+        
+        boolean wasPaused = m_system.isPaused();
+        
+        // Make sure the system has come to rest before trying to
+        // modify any critical values. Yes it is synchronized on a
+        // non final field but i think that this is okay, as the system
+        // can't be changed while it is running - so thats like as it
+        // is final? :)   TODO: Investigate this further
+        if(!m_system.isStopped()) {
+            
+            try {
+
+                synchronized(m_system) {
+
+                    m_system.pause(true);
+                    while(!m_system.isPaused())
+                        m_system.wait();
+                }
+            }
+            catch(InterruptedException ex) {
+            }
+        }
+        
+        // Make sure that the user really wants to reset the system
+        boolean res = m_system.isStopped() || SwingDialogs.showConfirmationMessage(
+
+            "Attention: This will reset the system",
+            "The system will now reset in order to apply your changes.\n\nDo you want to continue?"
+        );
+        if(res)
+            onResetHard();
+        
+        // Resume or keep paused
+        if(!m_system.isStopped())
+            m_system.pause(wasPaused);
+        
+        return res;
+    }
+    
+    private void onUpdateTitle() {
+        
+        String title = "jPC";
+        
+        if(m_system != null)
+            title += " - [" + m_system.getSystemName() + "]";
+        
+        if(m_mouseGrabber.isMouseGrabbed())
+            title += "   (Mouse grabbed: Release it by double clicking the right mouse button)";
+        
+        setTitle(title);
     }
     
     // </editor-fold>

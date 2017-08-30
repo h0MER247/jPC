@@ -76,22 +76,13 @@ public final class SwingDialogs {
     
     public static void showExceptionMessage(String title, Throwable exception) {
         
-        showExceptionMessage(title, exception, null);
-    }
-    
-    public static void showExceptionMessage(String title, Throwable exception, String messageAddendum) {
-        
         StringWriter e = new StringWriter();
         exception.printStackTrace(new PrintWriter(e));
-        
-        String msg = e.toString();
-        if(messageAddendum != null)
-            msg += "\n" + messageAddendum + "\n";
         
         JOptionPane.showMessageDialog(
                 
             null,
-            new JScrollPane(new JTextArea(msg)) {
+            new JScrollPane(new JTextArea(e.toString())) {
             
                 @Override
                 public Dimension getPreferredSize() {

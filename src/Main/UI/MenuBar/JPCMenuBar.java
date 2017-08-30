@@ -24,39 +24,14 @@ import javax.swing.JMenuBar;
 public final class JPCMenuBar extends JMenuBar {
     
     private final JPCMenuEmulation m_emulation;
-    private final JPCMenuCPU m_cpu;
-    private final JPCMenuDrives m_drives;
-    private final JPCMenuSpeaker m_speaker;
-    
-    
     
     public JPCMenuBar() {
         
         add(m_emulation = new JPCMenuEmulation());
-        add(m_cpu = new JPCMenuCPU());
-        add(m_drives = new JPCMenuDrives());
-        add(m_speaker = new JPCMenuSpeaker());
     }
-    
-    
     
     public JPCMenuEmulation getEmulationMenu() {
         
         return m_emulation;
-    }
-    
-    public JPCMenuCPU getCPUMenu() {
-        
-        return m_cpu;
-    }
-    
-    public JPCMenuDrives getDrivesMenu() {
-        
-        return m_drives;
-    }
-    
-    public JPCMenuSpeaker getSpeakerMenu() {
-        
-        return m_speaker;
     }
 }

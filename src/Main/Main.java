@@ -29,7 +29,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 
 
-public class Main {
+public final class Main {
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
         
@@ -39,7 +39,7 @@ public class Main {
 
                 @Override
                 public void addKeyEventPostProcessor(KeyEventPostProcessor p) {
-
+                    
                     if(!p.getClass().getName().contains("WindowsRootPaneUI$AltProcessor"))
                         super.addKeyEventPostProcessor(p);
                 }

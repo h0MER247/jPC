@@ -32,6 +32,8 @@ import java.awt.font.GlyphVector;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JPanel;
 import Hardware.Video.GraphicsCardListener;
+import Main.Systems.JPCSystem;
+import Main.Systems.JPCSystem.JPCSystemStateListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +41,9 @@ import javax.imageio.ImageIO;
 
 
 
-public abstract class JPCOutputPanel extends JPanel
-                                     implements GraphicsCardListener {
+public final class JPCOutputPanel extends JPanel
+                                  implements GraphicsCardListener,
+                                             JPCSystemStateListener {
 
     /* ----------------------------------------------------- *
      * Some fonts                                            *
@@ -70,24 +73,63 @@ public abstract class JPCOutputPanel extends JPanel
     /* ----------------------------------------------------- *
      * Graphic output panel                                  *
      * ----------------------------------------------------- */
-    public enum QualitySettings {
+    public enum Quality {
         
-        HighQuality,
-        LowQuality
+        High, Low
     };
-    private final QualitySettings m_qualitySettings;
+    private Quality m_quality;
     private MemoryImageSource m_imageSource;
     private Image m_image;
     
+    private JPCSystem m_system;
+    private boolean m_isStatisticEnabled;
+    private boolean m_isDriveIndicatorEnabled;
     
     
-    public JPCOutputPanel(QualitySettings quality) {
+    
+    public JPCOutputPanel() {
         
-        m_qualitySettings = quality;
+        setQuality(Quality.High);
+        setStatisticEnabled(false);
     }
     
     
     
+    public void setSystem(JPCSystem system) {
+        
+        if(m_system != null)
+            m_system.removeStateListener(this);
+        
+        m_system = system;
+        m_system.addStateListener(this);
+    }
+    
+    public void setQuality(Quality quality) {
+        
+        m_quality = quality;
+    }
+    
+    public void setStatisticEnabled(boolean isEnabled) {
+        
+        m_isStatisticEnabled = isEnabled;
+    }
+    
+    public void setDriveIndicatorEnabled(boolean isEnabled) {
+        
+        m_isDriveIndicatorEnabled = isEnabled;
+    }
+    
+    
+    
+    // <editor-fold defaultstate="collapsed" desc="Interface implementation of JPCSystemStateListener">
+    
+    @Override
+    public void onStateChanged() {
+        
+        EventQueue.invokeLater(this::repaint);
+    }
+    
+    // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Interface implementation of GraphicsCardListener">
     
     @Override
@@ -102,7 +144,9 @@ public abstract class JPCOutputPanel extends JPanel
     @Override
     public void onRedraw() {
         
-        m_imageSource.newPixels();
+        if(m_imageSource != null)
+            m_imageSource.newPixels();
+        
         EventQueue.invokeLater(this::repaint);
     }
     
@@ -121,19 +165,19 @@ public abstract class JPCOutputPanel extends JPanel
         int pnlW = getWidth();
         int pnlH = getHeight();
         
-        if(isEmulationStopped()) {
+        if(m_system == null || m_system.isStopped()) {
             
             drawOverlay(g2d, pnlW, pnlH);
         }
-        else {
-        
+        else if(m_image != null) {
+            
             // Center the output (m_image) inside the JPanel while retaining
             // its aspect ratio
             int imgW = m_image.getWidth(null);
             int imgH = m_image.getHeight(null);
             int imgX;
             int imgY;
-
+            
             float ratio = Math.min((float)pnlW / (float)imgW,
                                    (float)pnlH / (float)imgH);
 
@@ -143,17 +187,17 @@ public abstract class JPCOutputPanel extends JPanel
             imgY = (pnlH - imgH) / 2;
             
             // Draw output
-            drawEmulationOutput(g2d, imgX, imgY, imgW, imgH);
+            g2d.drawImage(m_image, imgX, imgY, imgW, imgH, null);
 
-            if(isDriveIndicatorLit())
+            if(m_isDriveIndicatorEnabled && m_system.isDriveIndicatorLit())
                 drawDriveIndicator(g2d, pnlW, pnlH);
-            if(isStatisticVisible())
-                drawStatistics(g2d, pnlW, pnlH);
-            if(isEmulationPaused())
+            if(m_isStatisticEnabled)
+                drawStatistics(g2d, pnlH);
+            if(m_system.isPaused())
                 drawOverlay(g2d, pnlW, pnlH);
         }
     }
-
+    
     // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Drawing methods">
     
@@ -161,16 +205,16 @@ public abstract class JPCOutputPanel extends JPanel
         
         Graphics2D g2d = (Graphics2D)g;
         
-        switch(m_qualitySettings) {
+        switch(m_quality) {
             
-            case HighQuality:
+            case High:
                 g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 break;
                 
-            case LowQuality:
+            case Low:
                 g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -181,13 +225,9 @@ public abstract class JPCOutputPanel extends JPanel
         return g2d;
     }
     
-    private void drawEmulationOutput(Graphics2D g2d, int imgX, int imgY, int imgW, int imgH) {
-        
-        g2d.drawImage(m_image, imgX, imgY, imgW, imgH, null);
-    }
     
     private void drawDriveIndicator(Graphics2D g2d, int pnlW, int pnlH) {
-
+        
         g2d.setColor(Color.WHITE);
         g2d.fillRect(pnlW - 40, pnlH - 15, 30, 5);
 
@@ -195,19 +235,19 @@ public abstract class JPCOutputPanel extends JPanel
         g2d.drawRect(pnlW - 40, pnlH - 15, 30, 5);
     }
     
-    private void drawStatistics(Graphics2D g2d, int pnlW, int pnlH) {
+    private void drawStatistics(Graphics2D g2d, int pnlH) {
         
-        drawString(g2d, RefPosition.BottomLeft, getStatisticData(), 5, new Rectangle(5, pnlH - 5, 0, 0), FONT_SMALL, Color.WHITE, COLOR_ALMOST_OPAQUE);
+        drawString(g2d, RefPosition.BottomLeft, "TODO", 5, new Rectangle(5, pnlH - 5, 0, 0), FONT_SMALL, Color.WHITE, COLOR_ALMOST_OPAQUE);
     }
     
     private void drawOverlay(Graphics2D g2d, int pnlW, int pnlH) {
         
-        if(isEmulationStopped()) {
+        if(m_system == null || m_system.isStopped()) {
             
             drawString(g2d, RefPosition.Center, "jPC", 0, new Rectangle(0, 0, pnlW, pnlH), FONT_BIG, Color.WHITE, COLOR_TRANSLUCENT);
-            drawString(g2d, RefPosition.BottomRight, "Java PC-XT emulator", 10, new Rectangle(pnlW, pnlH, 0, 0), FONT_SMALL, Color.WHITE, COLOR_TRANSLUCENT);
+            drawString(g2d, RefPosition.BottomRight, "Java PC emulator", 10, new Rectangle(pnlW, pnlH, 0, 0), FONT_SMALL, Color.WHITE, COLOR_TRANSLUCENT);
         }
-        else if(isEmulationPaused()) {
+        else if(m_system.isPaused()) {
             
             drawString(g2d, RefPosition.Center, "Paused", 0, new Rectangle(0, 0, pnlW, pnlH), FONT_BIG, Color.WHITE, COLOR_TRANSLUCENT);
         }
@@ -277,17 +317,6 @@ public abstract class JPCOutputPanel extends JPanel
             g2d.drawString(text, txtX, txtY);
         }
     }
-    
-    // </editor-fold>
-    
-    // <editor-fold defaultstate="collapsed" desc="Abstract methods">
-    
-    public abstract boolean isEmulationStopped();
-    public abstract boolean isEmulationPaused();
-    public abstract boolean isStatisticVisible();
-    public abstract boolean isFullscreenEnabled();
-    public abstract boolean isDriveIndicatorLit();
-    public abstract String getStatisticData();   
     
     // </editor-fold>
     
