@@ -6,8 +6,7 @@
  - Interrupt Controller i8259
  - Programmable Interval Timer i8253
  - UART 16450 (Serial port)
- - Basic IDE emulation
- - Basic VGA emulation
+ - Basic IDE and VGA emulation
  - PC Speaker output
  - Serial and PS/2 Mouse emulation
  
@@ -33,11 +32,11 @@
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408225/7f5d7cf8-409d-11e7-892f-47fc33d361eb.png" width="18%" alt="Dyna Blaster" title="Dyna Blaster" />
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408226/7f619248-409d-11e7-8d38-4acc05998225.png" width="18%" alt="Winter Games" title="Winter Games" />
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408227/7f6b56f2-409d-11e7-9792-854e980d1639.png" width="18%" alt="Jetpack" title="Jetpack" />
-  <img src="https://cloud.githubusercontent.com/assets/5739639/26408237/80b7fefc-409d-11e7-9b8d-556523854ba1.png" width="18%" alt="Jill Of The Jungle" title="Jill Of The Jungle" />
-  <img src="https://cloud.githubusercontent.com/assets/5739639/26408231/7f894cca-409d-11e7-99ef-fbe55d56b14d.png" width="18%" alt="The (even more) Incredible Machine" title="The (even more) Incredible Machine" />
-  <img src="https://cloud.githubusercontent.com/assets/5739639/26408230/7f877c10-409d-11e7-83da-fe120927d1aa.png" width="18%" alt="Microsoft Windows 3.0 (with a patched vga driver from http://www.vcfed.org)" title="Microsoft Windows 3.0 (with a patched vga driver from http://www.vcfed.org)" />
-  <img src="https://cloud.githubusercontent.com/assets/5739639/26408232/7f926fc6-409d-11e7-99be-1f68419d8c87.png" width="18%" alt="Solitaire" title="Solitaire" />
-  <img src="https://cloud.githubusercontent.com/assets/5739639/26408233/7f958134-409d-11e7-9241-a82e1d7a68d0.png" width="18%" alt="Superscape VGA Benchmark v1.0" title="Superscape VGA Benchmark v1.0" />
+  <img src="https://user-images.githubusercontent.com/5739639/29886259-c88cc8ac-8db9-11e7-9d0d-6ac4f2389994.png" width="18%" alt="Mortal Kombat 3" title="Mortal Kombat 3" />
+  <img src="https://user-images.githubusercontent.com/5739639/29886262-cc708cc4-8db9-11e7-870d-96d6ca91ddd6.png" width="18%" alt="Sim City 2000" title="Sim City 2000" />
+  <img src="https://user-images.githubusercontent.com/5739639/29886263-cc870b7a-8db9-11e7-9eaf-a3d7d5de1d53.png" width="18%" alt="The Settlers II" title="The Settlers II" />
+  <img src="https://user-images.githubusercontent.com/5739639/29886282-d44f6654-8db9-11e7-94f4-db3fd3a69dad.png" width="18%" alt="Turrican 2" title="Turrican 2" />
+  <img src="https://user-images.githubusercontent.com/5739639/29886279-d446ef74-8db9-11e7-8898-f01c0b6f9e45.png" width="18%" alt="Windows 95" title="Windows 95" />
 </p>
 
 ### Example Drive Image
