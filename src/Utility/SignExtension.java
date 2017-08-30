@@ -23,16 +23,21 @@ public final class SignExtension {
     
     public static int signExtend8To16(int value) {
         
-        return ((value & 0x80) != 0) ? value | 0xff00 : value;
+        return ((value << 24) >> 24) & 0xffff;
     }
     
     public static int signExtend8To32(int value) {
         
-        return ((value & 0x80) != 0) ? value | 0xffffff00 : value;
+        return (value << 24) >> 24;
     }
     
     public static int signExtend16To32(int value) {
         
-        return ((value & 0x8000) != 0) ? value | 0xffff0000 : value;
+        return (value << 16) >> 16;
+    }
+    
+    public static long signExtend32To64(int value) {
+        
+        return (long)value;
     }
 }
