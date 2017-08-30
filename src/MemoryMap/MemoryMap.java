@@ -69,11 +69,11 @@ public final class MemoryMap {
     
     public MemoryMap(int sizeOfAddressBusInBit) {
         
-        MAP_ADDR_MASK = (1 << sizeOfAddressBusInBit) - 1;
+        MAP_ADDR_MASK = (int)((1l << sizeOfAddressBusInBit) - 1l);
         MAP_PAGE_BITS = 12;
         MAP_PAGE_SIZE = 1 << MAP_PAGE_BITS;
         MAP_PAGE_MASK = MAP_PAGE_SIZE - 1;
-        MAP_PAGE_COUNT = 1 << (sizeOfAddressBusInBit - MAP_PAGE_BITS);
+        MAP_PAGE_COUNT = (int)(1l << (sizeOfAddressBusInBit - MAP_PAGE_BITS));
         
         m_devices = new HashMap<>();
         
@@ -186,9 +186,9 @@ public final class MemoryMap {
         
         if((startAddress % MAP_PAGE_SIZE) != 0)
             throw new IllegalArgumentException(String.format("The memory start address for device '%s' must be evenly divisible by the page size", memDevice));
-        if((startAddress & ~MAP_ADDR_MASK) != 0)
+        if(((startAddress & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
             throw new IllegalArgumentException(String.format("The memory start address for device '%s' is outside the address space", memDevice));
-        if(((startAddress + size - 1) & ~MAP_ADDR_MASK) != 0)
+        if((((startAddress + size - 1) & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
             throw new IllegalArgumentException(String.format("The given memory range for device '%s' is outside the address space", memDevice));
         if((size % MAP_PAGE_SIZE) != 0)
             throw new IllegalArgumentException(String.format("The memory size of device '%s' must be evenly divisible by the page size", memDevice));

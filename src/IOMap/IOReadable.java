@@ -25,6 +25,17 @@ public interface IOReadable extends IOMapped {
     
     int readIO8(int port);
     
-    default int readIO16(int port) { throw new UnsupportedOperationException("Unimplemented"); }
-    default int readIO32(int port) { throw new UnsupportedOperationException("Unimplemented"); }
+    // May not be the best solution for every device
+    default int readIO16(int port) {
+        
+        return readIO8(port) |
+              (readIO8(port + 1) << 8);
+    }
+    default int readIO32(int port) {
+        
+        return readIO8(port) |
+              (readIO8(port + 1) << 8) |
+              (readIO8(port + 2) << 16) |
+              (readIO8(port + 3) << 24);
+    }
 }

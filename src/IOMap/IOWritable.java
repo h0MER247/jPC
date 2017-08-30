@@ -25,6 +25,18 @@ public interface IOWritable extends IOMapped {
     
     void writeIO8(int port, int data);
     
-    default void writeIO16(int port, int data) { throw new UnsupportedOperationException("Unimplemented"); }
-    default void writeIO32(int port, int data) { throw new UnsupportedOperationException("Unimplemented"); }
+    // May not be the best solution for every device
+    default void writeIO16(int port, int data) {
+        
+        writeIO8(port, data & 0xff);
+        writeIO8(port + 1, (data >>> 8) & 0xff);
+    }
+    default void writeIO32(int port, int data) {
+        
+        writeIO8(port, data & 0xff);
+        writeIO8(port + 1, (data >>> 8) & 0xff);
+        writeIO8(port + 2, (data >>> 16) & 0xff);
+        writeIO8(port + 3, (data >>> 24) & 0xff);
+        
+    }
 }
