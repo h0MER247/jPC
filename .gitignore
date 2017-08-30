@@ -5,3 +5,5 @@
 /nbdist/
 /.nb-gradle/
 *.bin
+*.class
+*.nvr
