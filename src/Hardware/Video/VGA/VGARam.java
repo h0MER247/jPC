@@ -147,7 +147,8 @@ public final class VGARam implements HardwareComponent,
         // Reset read / write mode specific stuff
         m_readMode = m_readPlane = 0;
         m_writeMode = m_writePlane = 0;
-        m_chain4 = m_oddEvenRead = m_oddEvenWrite = false;
+        m_chain4 = false;
+        m_oddEvenRead = m_oddEvenWrite = true;
         
         // Reset bank offsets
         m_ramBankOffsetRead = m_ramBankOffsetWrite = 0;
@@ -226,6 +227,15 @@ public final class VGARam implements HardwareComponent,
         return readMEM8(address) |
               (readMEM8(address + 1) << 8);
     }
+
+    @Override
+    public int readMEM32(int address) {
+        
+        return readMEM8(address) |
+              (readMEM8(address + 1) << 8) |
+              (readMEM8(address + 2) << 16) |
+              (readMEM8(address + 3) << 24);
+    }
     
     @Override
     public int[][] getWritableMemoryAddresses() {
@@ -238,7 +248,7 @@ public final class VGARam implements HardwareComponent,
         
         int writePlane;
         
-        /* Determine address and plane */
+        // Determine address and plane
         address &= m_ramBankMask;
         address += m_ramBankOffsetWrite;
         
@@ -322,7 +332,16 @@ public final class VGARam implements HardwareComponent,
     public void writeMEM16(int address, int data) {
         
         writeMEM8(address, data & 0xff);
-        writeMEM8(address + 1, data >> 8);
+        writeMEM8(address + 1, (data >>> 8) & 0xff);
+    }
+
+    @Override
+    public void writeMEM32(int address, int data) {
+        
+        writeMEM8(address, data & 0xff);
+        writeMEM8(address + 1, (data >>> 8) & 0xff);
+        writeMEM8(address + 2, (data >>> 16) & 0xff);
+        writeMEM8(address + 3, (data >>> 24) & 0xff);
     }
     
     // </editor-fold>

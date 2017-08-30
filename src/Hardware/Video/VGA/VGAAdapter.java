@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import Scheduler.Schedulable;
 import Hardware.Video.GraphicsCardListener;
+import java.util.LinkedList;
 
 
 
@@ -105,7 +106,7 @@ public abstract class VGAAdapter extends GraphicsCard
     /* ----------------------------------------------------- *
      * Rendering                                             *
      * ----------------------------------------------------- */
-    private final ArrayList<VGARenderer> m_renderer;
+    private final LinkedList<VGARenderer> m_renderer;
     private VGARenderer m_currentRenderer;
     private int m_vramAddr;
     protected int m_pixelShift;
@@ -145,7 +146,7 @@ public abstract class VGAAdapter extends GraphicsCard
         m_dacPaletteCache = new int[256];
         
         // Initialize renderer
-        m_renderer = new ArrayList<>();
+        m_renderer = new LinkedList<>();
         m_renderer.add(new VGABlankRenderer());
         m_renderer.add(new VGATextRendererLo());
         m_renderer.add(new VGATextRendererHi());
@@ -322,10 +323,11 @@ public abstract class VGAAdapter extends GraphicsCard
                 
                 
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - readIO8(), port %04xh", port));
+                return 0xff;
+                //throw new IllegalArgumentException(String.format("Illegal access while reading port %04xh", port));
         }
     }
-
+    
     @Override
     public int[] getWritableIOPorts() {
         
@@ -466,7 +468,7 @@ public abstract class VGAAdapter extends GraphicsCard
                 
             
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - writeIO8(), port %04xh, data %02xh", port, data));
+                throw new IllegalArgumentException(String.format("Illegal access while writing %02xh to port %04xh", data, port));
         }
     }
     
@@ -1106,6 +1108,11 @@ public abstract class VGAAdapter extends GraphicsCard
                 break;
             }
         }
+    }
+    
+    protected void addRenderer(VGARenderer renderer) {
+        
+        m_renderer.push(renderer);
     }
     
     // <editor-fold defaultstate="collapsed" desc="Blank renderer">

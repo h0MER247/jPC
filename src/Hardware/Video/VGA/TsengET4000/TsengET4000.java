@@ -17,7 +17,7 @@
  */
 package Hardware.Video.VGA.TsengET4000;
 
-import Hardware.ROM.ET4000.ET4000ROM;
+import Hardware.ROM.Peripherals.ET4000.ET4000Bios;
 import Hardware.HardwareComponent;
 import Hardware.Video.VGA.VGAAdapter;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import IOMap.IOMap;
  * 
  * @see https://archive.org/details/bitsavers_tsengLabsTicsController1990_11230195
  */
-public class TsengET4000 extends VGAAdapter {
+public final class TsengET4000 extends VGAAdapter {
     
     /* ----------------------------------------------------- *
      * Current RAM bank                                      *
@@ -56,7 +56,7 @@ public class TsengET4000 extends VGAAdapter {
         ArrayList<HardwareComponent> c;
         
         c = new ArrayList<>(super.getSubComponents());
-        c.add(new ET4000ROM());
+        c.add(new ET4000Bios());
         
         return c;
     }
