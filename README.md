@@ -5,8 +5,10 @@
  - Programmable Peripheral Interface i8255
  - Interrupt Controller i8259
  - Programmable Interval Timer i8253
+ - UART 16450 (Serial port)
  - Basic VGA emulation
  - PC Speaker output
+ - Serial Mouse emulation
  
 ### Screenshots
 <p align="center">
@@ -60,7 +62,7 @@ As I have no interest in getting into any kind of copyright related issues, you 
  - [WinImage], for manipulating floppy- and hard disk images.
  
 ### Known Issues
-  - The special registers and behaviors of the Tseng ET4000 graphics card aren't implemented at all at the moment. The only thing that is (partially) implemented is the VGA standard.
+  - Most of the special registers and behaviors of the Tseng ET4000 graphics card aren't implemented at all at the moment.
   - There is no FDC or IDE emulation at the moment. Floppy and hard drives get emulated through hooking of interrupt 13h. Software, that requires access to the FDC or IDE i/o-ports, will not function correctly (or even at all).
   - CLI and STI opcodes aren't implemented properly.
   - I'm not entirely sure if the shift and rotate opcodes are implemented correctly for the 8086. I took the code for these opcodes from
