@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,21 +21,15 @@ package Hardware.Serial;
 
 public interface COMPort {
     
-    public interface DTRListener {
-    
+    public interface COMPortDevice {
+        
         void onDTRChanged(boolean dtr, boolean dtrOld);
-    }
-    public interface RTSListener {
-    
         void onRTSChanged(boolean rts, boolean rtsOld);
-    }
-    public interface DataReceiveListener {
-
         void onDataReceived(int data);
+        void onUpdateDevice();
     }
     
     void sendData(int data);
-    
     void setDCD(boolean dcd);
     void setDSR(boolean dsr);
     void setRI(boolean ri);

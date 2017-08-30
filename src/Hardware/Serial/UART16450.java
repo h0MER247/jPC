@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,10 +18,8 @@
 package Hardware.Serial;
 
 import Hardware.HardwareComponent;
-import Hardware.InterruptController.Intel8259;
-import Hardware.Serial.COMPort.DTRListener;
-import Hardware.Serial.COMPort.DataReceiveListener;
-import Hardware.Serial.COMPort.RTSListener;
+import Hardware.InterruptController.PICs;
+import Hardware.Serial.COMPort.COMPortDevice;
 import IOMap.IOReadable;
 import IOMap.IOWritable;
 import Scheduler.Schedulable;
@@ -32,11 +30,15 @@ import java.util.LinkedList;
 
 /**
  * @see ftp://ftp.altera.com/pub/lit_req/document/ds/ds16450.pdf
+ * 
+ * I don't like the implementation of COMPort - same problem as with PS2Port
+ * I really have to find a better way to implement the communication between
+ * the device and the uart...
  */
 public final class UART16450 implements HardwareComponent,
-                                   IOReadable,
-                                   IOWritable,
-                                   Schedulable {
+                                        IOReadable,
+                                        IOWritable,
+                                        Schedulable {
     
     /* ----------------------------------------------------- *
      * Frequency of the UART                                 *
@@ -140,21 +142,10 @@ public final class UART16450 implements HardwareComponent,
     private class COMPortImpl implements COMPort {
         
         private final LinkedList<Integer> m_buffer = new LinkedList<>();
-        private Runnable m_updateCallback;
-        private DTRListener m_dtrListener;
-        private RTSListener m_rtsListener;
-        private DataReceiveListener m_receiveListener;
+        private COMPortDevice m_device = null;
         
-        private void init(Runnable updateCallback,
-                          DTRListener dtrListener,
-                          RTSListener rtsListener,
-                          DataReceiveListener receiveListener) {
-            
-            m_updateCallback = updateCallback;
-            m_dtrListener = dtrListener;
-            m_rtsListener = rtsListener;
-            m_receiveListener = receiveListener;
-        }
+        private COMPortImpl init(COMPortDevice device) { m_device = device; return this; }
+        private void reset() { m_buffer.clear(); }
         
         @Override public void sendData(int data) { m_buffer.add(data); }
         @Override public void setDCD(boolean dcd) { UART16450.this.setDCD(dcd); }
@@ -162,19 +153,18 @@ public final class UART16450 implements HardwareComponent,
         @Override public void setRI(boolean ri) { UART16450.this.setRI(ri); }
         @Override public void setCTS(boolean cts) { UART16450.this.setCTS(cts); }
         
-        private boolean isDataAvailable() { if(m_updateCallback != null) m_updateCallback.run(); return !m_buffer.isEmpty(); }
+        private boolean isDataAvailable() { if(m_device != null) m_device.onUpdateDevice(); return !m_buffer.isEmpty(); }
         private int getData() { return m_buffer.pop(); }
-        
-        private void notifyDTRListener(boolean dtr, boolean dtrOld) { if(m_dtrListener != null) m_dtrListener.onDTRChanged(dtr, dtrOld); }
-        private void notifyRTSListener(boolean rts, boolean rtsOld) { if(m_rtsListener != null) m_rtsListener.onRTSChanged(rts, rtsOld); }
-        private void notifyReceiveListener(int data) { if(m_receiveListener != null) m_receiveListener.onDataReceived(data); }
+        private void setDTR(boolean dtr, boolean dtrOld) { if(m_device != null) m_device.onDTRChanged(dtr, dtrOld); }
+        private void setRTS(boolean rts, boolean rtsOld) { if(m_device != null) m_device.onRTSChanged(rts, rtsOld); }
+        private void receiveData(int data) { if(m_device != null) m_device.onDataReceived(data); }
     };
     private final COMPortImpl m_comPort;
     
     /* ----------------------------------------------------- *
      * Reference to the interrupt controller                 *
      * ----------------------------------------------------- */
-    private Intel8259 m_pic;
+    private PICs m_pic;
     
     
     
@@ -186,7 +176,6 @@ public final class UART16450 implements HardwareComponent,
         m_serialPortNum = portNum;
         m_serialIRQ = (portNum & 0x01) != 0 ? 4 : 3;
         
-        // Initialize communication port
         m_comPort = new COMPortImpl();
     }
     
@@ -214,13 +203,15 @@ public final class UART16450 implements HardwareComponent,
         
         m_thr = -1;
         m_rbr = 0;
+        
+        m_comPort.reset();
     }
     
     @Override
     public void wireWith(HardwareComponent component) {
         
-        if(component instanceof Intel8259)
-            m_pic = (Intel8259)component;
+        if(component instanceof PICs)
+            m_pic = (PICs)component;
     }
     
     // </editor-fold>
@@ -316,7 +307,7 @@ public final class UART16450 implements HardwareComponent,
             
                 
             default:
-                throw new IllegalArgumentException(String.format("Illegal access - readIO8(), port %04xh", port));
+                throw new IllegalArgumentException(String.format("Illegal access while reading port %04xh", port));
         }
     }
 
@@ -325,10 +316,10 @@ public final class UART16450 implements HardwareComponent,
         
         switch(m_serialPortNum) {
             
-            case 1: return new int[] { 0x3f8, 0x3f9, 0x3fb, 0x3fc, 0x3ff };
-            case 2: return new int[] { 0x2f8, 0x2f9, 0x2fb, 0x2fc, 0x2ff };
-            case 3: return new int[] { 0x3e8, 0x3e9, 0x3eb, 0x3ec, 0x3ef };
-            case 4: return new int[] { 0x2e8, 0x2e9, 0x2eb, 0x2ec, 0x2ef };
+            case 1: return new int[] { 0x3f8, 0x3f9, 0x3fa, 0x3fb, 0x3fc, 0x3fd, 0x3fe, 0x3ff };
+            case 2: return new int[] { 0x2f8, 0x2f9, 0x2fa, 0x2fb, 0x2fc, 0x2fd, 0x2fe, 0x2ff };
+            case 3: return new int[] { 0x3e8, 0x3e9, 0x3fa, 0x3eb, 0x3ec, 0x3fd, 0x3fe, 0x3ef };
+            case 4: return new int[] { 0x2e8, 0x2e9, 0x2fa, 0x2eb, 0x2ec, 0x2fd, 0x2fe, 0x2ef };
             
             default:
                 throw new IllegalStateException();
@@ -372,6 +363,11 @@ public final class UART16450 implements HardwareComponent,
                 }
                 break;
                 
+            // Unwritable
+            case 0x2ea: case 0x2fa:
+            case 0x3ea: case 0x3fa:
+                break;
+                
             // Line control register
             case 0x2eb: case 0x2fb:
             case 0x3eb: case 0x3fb:
@@ -385,7 +381,7 @@ public final class UART16450 implements HardwareComponent,
             case 0x3ec: case 0x3fc:
                 if(((data ^ m_mcr) & MCR_DATA_TERMINAL_READY) != 0) {
                     
-                    m_comPort.notifyDTRListener(
+                    m_comPort.setDTR(
                             
                         (data & MCR_DATA_TERMINAL_READY) != 0,
                         (m_mcr & MCR_DATA_TERMINAL_READY) != 0
@@ -393,13 +389,23 @@ public final class UART16450 implements HardwareComponent,
                 }
                 if(((data ^ m_mcr) & MCR_REQUEST_TO_SEND) != 0) {
                     
-                    m_comPort.notifyRTSListener(
+                    m_comPort.setRTS(
                             
                         (data & MCR_REQUEST_TO_SEND) != 0,
                         (m_mcr & MCR_REQUEST_TO_SEND) != 0
                     );
                 }
                 m_mcr = data;
+                break;
+                
+            // Unwritable
+            case 0x2ed: case 0x2fd:
+            case 0x3ed: case 0x3fd:
+                break;
+                
+            // Unwritable
+            case 0x2ee: case 0x2fe:
+            case 0x3ee: case 0x3fe:
                 break;
                 
             // Scratch pad
@@ -410,7 +416,7 @@ public final class UART16450 implements HardwareComponent,
                 
             
             default:
-                throw new IllegalArgumentException(String.format("%s: Illegal access - writeIO8(), port %04xh, data %02xh", getClass().getName(), port, data));
+                throw new IllegalArgumentException(String.format("Illegal access while writing %02xh to port %04xh", data, port));
         }
     }
     
@@ -436,7 +442,7 @@ public final class UART16450 implements HardwareComponent,
             // Transmit data
             if(m_thr != -1) {
                 
-                m_comPort.notifyReceiveListener(m_thr);
+                m_comPort.receiveData(m_thr);
                 m_thr = -1;
                 
                 m_lsr |= LSR_TRANSMITTER_HOLDING_REG_EMPTY |
@@ -493,19 +499,9 @@ public final class UART16450 implements HardwareComponent,
         return m_serialPortNum;
     }
     
-    public COMPort getCOMPort(Runnable updateCallback,
-                              DTRListener dtrListener,
-                              RTSListener rtsListener,
-                              DataReceiveListener receiveListener) {
+    public COMPort getCOMPort(COMPortDevice device) {
         
-        m_comPort.init(
-                
-            updateCallback,
-            dtrListener,
-            rtsListener,
-            receiveListener
-        );
-        return m_comPort;
+        return m_comPort.init(device);
     }
     
     private void setCTS(boolean cts) {
