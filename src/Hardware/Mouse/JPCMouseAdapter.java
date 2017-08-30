@@ -45,8 +45,14 @@ public final class JPCMouseAdapter extends MouseAdapter {
     // <editor-fold defaultstate="collapsed" desc="Interface implementation of MouseAdapter">
     
     @Override
-    public void mouseMoved(MouseEvent me) {
+    public void mouseDragged(MouseEvent me) {
      
+        setPosition(me.getX(), me.getY());
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent me) {
+        
         setPosition(me.getX(), me.getY());
     }
     
