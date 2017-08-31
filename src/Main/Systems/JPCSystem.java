@@ -132,12 +132,12 @@ public abstract class JPCSystem {
                     // Reset everything
                     if(m_flagReset) {
                         
+                        configure();
+                        
                         m_ioMap.reset();
                         m_memMap.reset();
                         m_components.forEach(c -> c.reset());
                         m_scheduler.reset();
-                        
-                        configure();
                         
                         m_flagReset = false;
                     }
