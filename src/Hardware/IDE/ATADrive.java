@@ -40,7 +40,9 @@ public final class ATADrive {
     
     /* ----------------------------------------------------- *
      * Disk geometry (default and also translated)           *
-     * ----------------------------------------------------- */    
+     * ----------------------------------------------------- */   
+    private static final int IDX_DEFAULT = 0;
+    private static final int IDX_TRANSLATED = 1; 
     private final int[] m_sectors;
     private final int[] m_heads;
     private final int[] m_cylinders;
@@ -79,35 +81,33 @@ public final class ATADrive {
     
     public boolean mountImage(String image) {
 
+        m_regs.isDisconnected = true;
+        
         File imageFile = new File(image);
+        if(imageFile.exists()) {
         
-        try {
-        
-            m_regs.isDisconnected = true;
-            
-            if(!imageFile.exists())
-                return false;
-            
-            m_image = new RandomAccessFile(imageFile, "rw");
-            m_imageFile = imageFile;
-            m_imageSize = m_image.length();
-        }
-        catch(IOException ex) {
-            
-            return false;
-        }
-        
-        m_geometryLBAs = (int)(m_imageSize / 512l);
+            try {
 
-        // Define default disk geometry
-        m_geometryIndex = 0;
-        m_sectors[0] = 63;
-        m_heads[0] = 16;
-        m_cylinders[0] = (int)(m_imageSize / (m_sectors[0] * m_heads[0] * 512l));
-
-        // Success
-        m_regs.isDisconnected = false;
-        return true;
+                m_image = new RandomAccessFile(imageFile, "rw");
+                m_imageFile = imageFile;
+                m_imageSize = m_image.length();
+                
+                // Define default disk geometry
+                m_geometryLBAs = (int)(m_imageSize / 512l);
+                
+                m_geometryIndex = IDX_DEFAULT;
+                m_sectors[IDX_DEFAULT] = 63;
+                m_heads[IDX_DEFAULT] = 16;
+                m_cylinders[IDX_DEFAULT] = (int)(m_imageSize / (m_sectors[0] * m_heads[0] * 512l));
+                
+                // Success
+                m_regs.isDisconnected = false;
+            }
+            catch(IOException ex) {
+            }
+        }
+        
+        return !m_regs.isDisconnected;
     }
     
     public boolean ejectImage() {
@@ -123,8 +123,7 @@ public final class ATADrive {
         catch(IOException ex) {
         }
         
-        m_regs.isDisconnected = true;
-        return true;
+        return m_regs.isDisconnected = true;
     }
     
     
@@ -166,28 +165,28 @@ public final class ATADrive {
     
     public int getCylindersDefault() {
 
-        return m_cylinders[0];
+        return m_cylinders[IDX_DEFAULT];
     }
     
     public int getHeadsDefault() {
         
-        return m_heads[0];
+        return m_heads[IDX_DEFAULT];
     }
     
     public int getSectorsDefault() {
 
-        return m_sectors[0];
+        return m_sectors[IDX_DEFAULT];
     }
     
     
     
     public void setTranslation(int sectors, int heads) {
     
-        m_sectors[1] = sectors;
-        m_heads[1] = heads;
-        m_cylinders[1] = (int)(m_imageSize / (m_sectors[0] * m_heads[0] * 512l));
+        m_sectors[IDX_TRANSLATED] = sectors;
+        m_heads[IDX_TRANSLATED] = heads;
+        m_cylinders[IDX_TRANSLATED] = (int)(m_imageSize / (m_sectors[IDX_DEFAULT] * m_heads[IDX_DEFAULT] * 512l));
         
-        m_geometryIndex = 1;
+        m_geometryIndex = IDX_TRANSLATED;
     }
     
     public int getTotalNumberOfSectors() {
