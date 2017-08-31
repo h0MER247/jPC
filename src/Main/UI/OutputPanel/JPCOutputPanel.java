@@ -37,6 +37,8 @@ import Main.Systems.JPCSystem.JPCSystemStateListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
 
@@ -84,7 +86,8 @@ public final class JPCOutputPanel extends JPanel
     private JPCSystem m_system;
     private boolean m_isStatisticEnabled;
     private boolean m_isDriveIndicatorEnabled;
-    
+    private Timer m_statisticTimer;
+    private String m_statisticData;
     
     
     public JPCOutputPanel() {
@@ -111,7 +114,33 @@ public final class JPCOutputPanel extends JPanel
     
     public void setStatisticEnabled(boolean isEnabled) {
         
-        m_isStatisticEnabled = isEnabled;
+        if(isEnabled) {
+            
+            m_statisticTimer = new Timer();
+            m_statisticTimer.schedule(
+                    
+                new TimerTask() {
+                
+                    @Override
+                    public void run() {
+
+                        m_statisticData = m_system.getStatistics();
+                        m_isStatisticEnabled = true;
+                    }
+                },
+                0l,
+                1000l
+            );
+        }
+        else {
+            
+            m_isStatisticEnabled = false;
+            if(m_statisticTimer != null) {
+                
+                m_statisticTimer.cancel();
+                m_statisticTimer = null;
+            }
+        }
     }
     
     public void setDriveIndicatorEnabled(boolean isEnabled) {
@@ -237,7 +266,7 @@ public final class JPCOutputPanel extends JPanel
     
     private void drawStatistics(Graphics2D g2d, int pnlH) {
         
-        drawString(g2d, RefPosition.BottomLeft, "TODO", 5, new Rectangle(5, pnlH - 5, 0, 0), FONT_SMALL, Color.WHITE, COLOR_ALMOST_OPAQUE);
+        drawString(g2d, RefPosition.BottomLeft, m_statisticData, 5, new Rectangle(5, pnlH - 5, 0, 0), FONT_SMALL, Color.WHITE, COLOR_ALMOST_OPAQUE);
     }
     
     private void drawOverlay(Graphics2D g2d, int pnlW, int pnlH) {
