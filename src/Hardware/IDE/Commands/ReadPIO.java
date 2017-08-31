@@ -17,17 +17,23 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
 import java.io.IOException;
 
 
 
 public final class ReadPIO extends ATACommand {
 
+    public ReadPIO(IDE ide) {
+        
+        super(ide);
+    }
+    
     @Override
     public boolean onFirstExecute() {
         
-        if(m_drive.getRegister().sectorCount == 0)
-            m_drive.getRegister().sectorCount = 0xff;
+        if(m_currDrive.getRegister().sectorCount == 0)
+            m_currDrive.getRegister().sectorCount = 0xff;
         
         return proceed();
     }
@@ -35,12 +41,12 @@ public final class ReadPIO extends ATACommand {
     @Override
     public void onExecute() {
         
-        m_drive.getRegister().sectorCount--;
+        m_currDrive.getRegister().sectorCount--;
         try {
             
-            m_drive.getPIOBuffer().reset();
-            m_drive.setDriveIndicator();
-            m_drive.read(1);
+            m_currDrive.getPIOBuffer().reset();
+            m_currDrive.setDriveIndicator();
+            m_currDrive.read(1);
             
             initPIOTransfer();
         }
@@ -53,7 +59,7 @@ public final class ReadPIO extends ATACommand {
     @Override
     public void onPIOBufferEvent() {
         
-        if(m_drive.getRegister().sectorCount > 0)
+        if(m_currDrive.getRegister().sectorCount > 0)
             onExecute();
         else
             finishPIOTransfer();

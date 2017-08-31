@@ -18,10 +18,16 @@
 package Hardware.IDE.Commands;
 
 import Hardware.IDE.ATARegister;
+import Hardware.IDE.IDE;
 
 
 
 public final class DriveDiagnostic extends ATACommand {
+
+    public DriveDiagnostic(IDE ide) {
+        
+        super(ide);
+    }
     
     @Override
     public boolean onFirstExecute() {
@@ -32,8 +38,13 @@ public final class DriveDiagnostic extends ATACommand {
     @Override
     public void onExecute() {
         
-        m_drive.getRegister().error = ATARegister.ATA_ER_AMNF;
-        m_drive.requestIRQ();
+        // Reset drive / head register TODO: Find a better way to do this
+        m_currDrive.getRegister().driveAndHead = 0x00;
+        m_otherDrive.getRegister().driveAndHead = 0x00;
+        m_ide.updateDrive(0x00);
+        
+        m_currDrive.getRegister().error = ATARegister.ATA_ER_AMNF;
+        m_currDrive.requestIRQ();
     }
     
     @Override

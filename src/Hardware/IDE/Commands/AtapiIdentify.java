@@ -21,9 +21,9 @@ import Hardware.IDE.IDE;
 
 
 
-public final class InitDriveParams extends ATACommand {
+public final class AtapiIdentify extends ATACommand {
 
-    public InitDriveParams(IDE ide) {
+    public AtapiIdentify(IDE ide) {
         
         super(ide);
     }
@@ -31,20 +31,14 @@ public final class InitDriveParams extends ATACommand {
     @Override
     public boolean onFirstExecute() {
         
-        return proceed();
+        // No support for atapi drives atm, sorry
+        return abort();
     }
-    
+
     @Override
     public void onExecute() {
-        
-        m_currDrive.setTranslation(
-            
-            m_currDrive.getRegister().sectorCount,
-            (m_currDrive.getRegister().driveAndHead & 0x0f) + 1
-        );
-        m_currDrive.requestIRQ();
     }
-    
+
     @Override
     public void onPIOBufferEvent() {
     }

@@ -23,20 +23,29 @@ import static Hardware.IDE.ATARegister.ATA_SR_DRDY;
 import static Hardware.IDE.ATARegister.ATA_SR_DRQ;
 import static Hardware.IDE.ATARegister.ATA_SR_DSC;
 import static Hardware.IDE.ATARegister.ATA_SR_ERR;
+import Hardware.IDE.IDE;
 
 
 
 public abstract class ATACommand {
     
-    protected ATADrive m_drive;
+    protected final IDE m_ide;
+    protected ATADrive m_currDrive;
     protected ATADrive m_otherDrive;
-
     
     
-    public boolean init(ATADrive drive, ATADrive otherDrive) {
+    
+    public ATACommand(IDE ide) {
         
-        m_drive = drive;
-        m_otherDrive = otherDrive;
+        m_ide = ide;
+    }
+    
+    
+    
+    public boolean init() {
+        
+        m_currDrive = m_ide.getCurrentDrive();
+        m_otherDrive = m_ide.getOtherDrive();
         
         return onFirstExecute();
     }
@@ -45,10 +54,10 @@ public abstract class ATACommand {
     
     protected boolean abort() {
         
-        m_drive.getRegister().command = 0;
-        m_drive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC | ATA_SR_ERR;
-        m_drive.getRegister().error = ATA_ER_ABRT;
-        m_drive.requestIRQ();
+        m_currDrive.getRegister().command = 0;
+        m_currDrive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC | ATA_SR_ERR;
+        m_currDrive.getRegister().error = ATA_ER_ABRT;
+        m_currDrive.requestIRQ();
         
         return false;
     }
@@ -67,15 +76,15 @@ public abstract class ATACommand {
     
     protected void initPIOTransfer() {
         
-        m_drive.getPIOBuffer().setPosition(0);
-        m_drive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC | ATA_SR_DRQ;
-        m_drive.requestIRQ();
+        m_currDrive.getPIOBuffer().setPosition(0);
+        m_currDrive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC | ATA_SR_DRQ;
+        m_currDrive.requestIRQ();
     }
     
     protected void finishPIOTransfer() {
         
-        m_drive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC;
-        m_drive.requestIRQ();
+        m_currDrive.getRegister().status = ATA_SR_DRDY | ATA_SR_DSC;
+        m_currDrive.requestIRQ();
     }
     
     

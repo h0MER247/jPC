@@ -17,17 +17,23 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
 import java.io.IOException;
 
 
 
 public final class WritePIO extends ATACommand {
 
+    public WritePIO(IDE ide) {
+        
+        super(ide);
+    }
+
     @Override
     public boolean onFirstExecute() {
         
-        if(m_drive.getRegister().sectorCount == 0)
-            m_drive.getRegister().sectorCount = 0xff;
+        if(m_currDrive.getRegister().sectorCount == 0)
+            m_currDrive.getRegister().sectorCount = 0xff;
         
         return proceed();
     }
@@ -41,13 +47,13 @@ public final class WritePIO extends ATACommand {
     @Override
     public void onPIOBufferEvent() {
 
-        m_drive.getRegister().sectorCount--;
+        m_currDrive.getRegister().sectorCount--;
         try {
             
-            m_drive.setDriveIndicator();
-            m_drive.write(1);
+            m_currDrive.setDriveIndicator();
+            m_currDrive.write(1);
             
-            if(m_drive.getRegister().sectorCount > 0)
+            if(m_currDrive.getRegister().sectorCount > 0)
                 initPIOTransfer();
             else
                 finishPIOTransfer();

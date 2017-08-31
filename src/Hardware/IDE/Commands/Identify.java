@@ -17,6 +17,7 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
 import java.nio.charset.Charset;
 import Hardware.IDE.PIOBuffer;
 
@@ -25,11 +26,16 @@ import Hardware.IDE.PIOBuffer;
 public final class Identify extends ATACommand {
     
     private final Charset ASCII = Charset.forName("US-ASCII");
+
+    public Identify(IDE ide) {
+        
+        super(ide);
+    }
     
     @Override
     public boolean onFirstExecute() {
         
-        if(m_drive.getRegister().isDisconnected)
+        if(m_currDrive.getRegister().isDisconnected)
             return abort();
         
         return proceed();
@@ -38,26 +44,26 @@ public final class Identify extends ATACommand {
     @Override
     public void onExecute() {
         
-        PIOBuffer pio = m_drive.getPIOBuffer();
+        PIOBuffer pio = m_currDrive.getPIOBuffer();
         pio.reset();
         
         // Create identification packet
-        pio.setInt16(2, m_drive.getCylindersDefault());
-        pio.setInt16(6, m_drive.getHeadsDefault());
-        pio.setInt16(12, m_drive.getSectorsDefault());
+        pio.setInt16(2, m_currDrive.getCylindersDefault());
+        pio.setInt16(6, m_currDrive.getHeadsDefault());
+        pio.setInt16(12, m_currDrive.getSectorsDefault());
         pio.setRPadStr16(20, 20, "S/N:007", ASCII);
         pio.setInt16(40, 0x0003); // Buffer type
         pio.setInt16(42, pio.getSize() / 512); // Buffer size in 512 byte increments
         pio.setLPadStr16(46, 8, "v0.1", ASCII);
-        pio.setLPadStr16(54, 40, String.format("jPC HDD - [%s]", m_drive.getFileName()), ASCII);
+        pio.setLPadStr16(54, 40, String.format("jPC HDD - [%s]", m_currDrive.getFileName()), ASCII);
         pio.setInt16(96, 1); // DWord PIO transfer supported
-        pio.setInt16(108, m_drive.getCylinders());
-        pio.setInt16(110, m_drive.getHeads());
-        pio.setInt16(112, m_drive.getSectors());
-        pio.setInt16(114, m_drive.getTotalNumberOfSectors() & 0xffff);
-        pio.setInt16(116, m_drive.getTotalNumberOfSectors() >>> 16);
-        pio.setInt16(120, m_drive.getTotalNumberOfLBAs()& 0xffff);
-        pio.setInt16(122, m_drive.getTotalNumberOfLBAs() >>> 16);
+        pio.setInt16(108, m_currDrive.getCylinders());
+        pio.setInt16(110, m_currDrive.getHeads());
+        pio.setInt16(112, m_currDrive.getSectors());
+        pio.setInt16(114, m_currDrive.getTotalNumberOfSectors() & 0xffff);
+        pio.setInt16(116, m_currDrive.getTotalNumberOfSectors() >>> 16);
+        pio.setInt16(120, m_currDrive.getTotalNumberOfLBAs()& 0xffff);
+        pio.setInt16(122, m_currDrive.getTotalNumberOfLBAs() >>> 16);
         
         initPIOTransfer();
     }

@@ -17,9 +17,16 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
+
 
 
 public final class Recalibrate extends ATACommand {
+
+    public Recalibrate(IDE ide) {
+        
+        super(ide);
+    }
 
     @Override
     public boolean onFirstExecute() {
@@ -30,8 +37,8 @@ public final class Recalibrate extends ATACommand {
     @Override
     public void onExecute() {
         
-        m_drive.getRegister().setCylinder(0);
-        m_drive.requestIRQ();
+        m_currDrive.getRegister().setCylinder(0);
+        m_currDrive.requestIRQ();
     }
 
     @Override

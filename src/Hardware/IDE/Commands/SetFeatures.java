@@ -17,9 +17,16 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
+
 
 
 public final class SetFeatures extends ATACommand {
+
+    public SetFeatures(IDE ide) {
+        
+        super(ide);
+    }
 
     @Override
     public boolean onFirstExecute() {
@@ -30,10 +37,10 @@ public final class SetFeatures extends ATACommand {
     @Override
     public void onExecute() {
         
-        switch(m_drive.getRegister().features) {
+        switch(m_currDrive.getRegister().features) {
             
             default:
-                System.out.printf("Unknown feature requested: %02x\n", m_drive.getRegister().features);
+                System.out.printf("Unknown feature requested: %02x\n", m_currDrive.getRegister().features);
                 abort();
                 break;
         }

@@ -17,9 +17,16 @@
  */
 package Hardware.IDE.Commands;
 
+import Hardware.IDE.IDE;
+
 
 
 public final class ReadVerifyPIO extends ATACommand {
+
+    public ReadVerifyPIO(IDE ide) {
+        
+        super(ide);
+    }
 
     @Override
     public boolean onFirstExecute() {
@@ -30,10 +37,10 @@ public final class ReadVerifyPIO extends ATACommand {
     @Override
     public void onExecute() {
         
-        int numSectors = m_drive.getRegister().getSectorCount();
+        int numSectors = m_currDrive.getRegister().getSectorCount();
         
-        m_drive.advanceSectors(numSectors - 1);
-        m_drive.requestIRQ();
+        m_currDrive.advanceSectors(numSectors - 1);
+        m_currDrive.requestIRQ();
     }
 
     @Override

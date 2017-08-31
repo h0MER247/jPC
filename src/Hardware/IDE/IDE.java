@@ -6,6 +6,7 @@ import Hardware.IDE.Commands.ATACommand;
 import Hardware.IDE.Commands.DriveDiagnostic;
 import Hardware.IDE.Commands.Identify;
 import Hardware.IDE.Commands.InitDriveParams;
+import Hardware.IDE.Commands.AtapiIdentify;
 import Hardware.IDE.Commands.ReadPIO;
 import Hardware.IDE.Commands.ReadVerifyPIO;
 import Hardware.IDE.Commands.Recalibrate;
@@ -48,6 +49,7 @@ public final class IDE implements HardwareComponent,
     private final ATACommand m_cmdReadVerifyPIO;
     private final ATACommand m_cmdSetFeatures;
     private final ATACommand m_cmdSeek;
+    private final ATACommand m_cmdPIdentify;
     private ATACommand m_currentCommand;
     
     /* ----------------------------------------------------- *
@@ -66,15 +68,16 @@ public final class IDE implements HardwareComponent,
         m_drives[0] = new ATADrive(irqNumber);
         m_drives[1] = new ATADrive(irqNumber);
         
-        m_cmdIdentify = new Identify();
-        m_cmdReadPIO = new ReadPIO();
-        m_cmdWritePIO = new WritePIO();
-        m_cmdInitDriveParams = new InitDriveParams();
-        m_cmdDriveDiagnostic = new DriveDiagnostic();
-        m_cmdRecalibrate = new Recalibrate();
-        m_cmdReadVerifyPIO = new ReadVerifyPIO();
-        m_cmdSetFeatures = new SetFeatures();
-        m_cmdSeek = new Seek();
+        m_cmdIdentify = new Identify(this);
+        m_cmdReadPIO = new ReadPIO(this);
+        m_cmdWritePIO = new WritePIO(this);
+        m_cmdInitDriveParams = new InitDriveParams(this);
+        m_cmdDriveDiagnostic = new DriveDiagnostic(this);
+        m_cmdRecalibrate = new Recalibrate(this);
+        m_cmdReadVerifyPIO = new ReadVerifyPIO(this);
+        m_cmdSetFeatures = new SetFeatures(this);
+        m_cmdSeek = new Seek(this);
+        m_cmdPIdentify = new AtapiIdentify(this);
         
         m_portMapping = isPrimaryAdapter ? new int[] { 0x1f0, 0x1f1, 0x1f2, 0x1f3, 0x1f4, 0x1f5, 0x1f6, 0x1f7, 0x3f6 } :
                                            new int[] { 0x170, 0x171, 0x172, 0x173, 0x174, 0x175, 0x176, 0x177, 0x376 };
@@ -378,12 +381,14 @@ public final class IDE implements HardwareComponent,
     // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Some helper methods">
     
-    private void updateDrive(int data) {
+    public void updateDrive(int data) {
         
+        boolean isLBAEnabled = (data & 0x40) != 0;
         int driveSelect = (data >>> 4) & 0x01;
         m_currentDrive = m_drives[driveSelect];
         m_otherDrive = m_drives[driveSelect ^ 0x01];
         
+        m_currentDrive.setLBAEnable(isLBAEnabled);
         m_currentDrive.updateIRQ();
     }
     
@@ -394,8 +399,11 @@ public final class IDE implements HardwareComponent,
         if(((m_currentDrive.getRegister().control ^ data) & ATA_CTRL_SRST) != 0) {
             
             m_currentDrive.getRegister().status = ATA_SR_BSY;
-            if((data & ATA_CTRL_SRST) == 0)
+            if((data & ATA_CTRL_SRST) == 0) {
+                
                 m_currentDrive.getRegister().reset();
+                updateDrive(m_currentDrive.getRegister().driveAndHead); // TODO: Find a better way
+            }
         }
         
         // Update interrupts
@@ -416,12 +424,13 @@ public final class IDE implements HardwareComponent,
             case ATA_CMD_READ_VERIFY_PIO: m_currentCommand = m_cmdReadVerifyPIO; break;
             case ATA_CMD_SET_FEATURES: m_currentCommand = m_cmdSetFeatures; break;
             case ATA_CMD_SEEK: m_currentCommand = m_cmdSeek; break;
+            case ATA_CMD_ATAPI_IDENTIFY: m_currentCommand = m_cmdPIdentify; break;
             
             default:
                 throw new IllegalArgumentException(String.format("Unknown IDE Command: %02X", data));
         }
         
-        if(m_currentCommand.init(m_currentDrive, m_otherDrive))
+        if(m_currentCommand.init())
             m_currentCommand.onExecute();
         else
             m_currentCommand = null;
@@ -438,15 +447,14 @@ public final class IDE implements HardwareComponent,
                m_drives[1].isDriveIndicatorLit();
     }
     
-    // Hack for CMOS.java... until i find a propper way (if there is any)
-    public ATADrive getMasterDrive() {
+    public ATADrive getCurrentDrive() {
         
-        return m_drives[0];
+        return m_currentDrive;
     }
     
-    public ATADrive getSlaveDrive() {
+    public ATADrive getOtherDrive() {
         
-        return m_drives[1];
+        return m_otherDrive;
     }
     
     // </editor-fold>

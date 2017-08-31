@@ -48,6 +48,7 @@ public final class ATADrive {
     private final int[] m_cylinders;
     private int m_geometryIndex;
     private int m_geometryLBAs;
+    private boolean m_isLBAEnabled;
     
     /* ----------------------------------------------------- *
      * Interrupt handling                                    *
@@ -140,10 +141,10 @@ public final class ATADrive {
     
     public String getFileName() {
         
-        if(isDisconnected())
-            return "DISCONNECTED";
-        else
+        if(!isDisconnected())
             return m_imageFile.getName().toUpperCase();
+        
+        return "";
     }
     
     public boolean isDisconnected() {
@@ -211,12 +212,19 @@ public final class ATADrive {
     
     
     
-    private long getCurrentSector() {
+    public void setLBAEnable(boolean isEnabled) {
+        
+        m_isLBAEnabled = isEnabled;
+    }
+    
+    
+    
+    private long getCHSAddress() {
         
         return (m_regs.getCylinder() * getHeads() + m_regs.getHead()) * getSectors() + m_regs.getSector() - 1;
     }
     
-    private void setCurrentSector(long sector) {
+    private void setCHSAddress(long sector) {
         
         long c = sector / (getHeads() * getSectors());
         long t = sector % (getHeads() * getSectors());
@@ -228,31 +236,65 @@ public final class ATADrive {
         m_regs.setSector((int)s);
     }
     
+    private long getLBA28Address() {
+        
+        return (m_regs.getHead() << 24) | (m_regs.getCylinder() << 8) | m_regs.getSector();
+    }
+    
+    private void setLBA28Address(long sector) {
+        
+        int c = (int)((sector >>> 8) & 0xffffl);
+        int h = (int)((sector >>> 24) & 0x0fl);
+        int s = (int)(sector & 0xffl);
+        
+        m_regs.setCylinder(c);
+        m_regs.setHead(h);
+        m_regs.setSector(s);
+    }
+    
+    
+    
+    private long getAddress() {
+        
+        if(m_isLBAEnabled)
+            return getLBA28Address();
+        else
+            return getCHSAddress();
+    }
+    
+    private void setAddress(long sector) {
+        
+        if(m_isLBAEnabled)
+            setLBA28Address(sector);
+        else
+            setCHSAddress(sector);
+    }
+    
     public void advanceSectors(int numSectors) {
         
-        setCurrentSector(getCurrentSector() + numSectors);
+        setAddress(getAddress() + numSectors);
     }
     
     
     
     public void read(int numSectors) throws IOException {
         
-        long lba = getCurrentSector();
+        long lba = getAddress();
         
         m_image.seek(lba * 512l);
         m_image.read(m_pioBuffer.getArray(), 0, numSectors * 512);
         
-        setCurrentSector(lba + numSectors);
+        setAddress(lba + numSectors);
     }
     
     public void write(int numSectors) throws IOException {
         
-        long lba = getCurrentSector();
+        long lba = getAddress();
         
         m_image.seek(lba * 512);
         m_image.write(m_pioBuffer.getArray(), 0, numSectors * 512);
         
-        setCurrentSector(lba + numSectors);
+        setAddress(lba + numSectors);
     }
     
     

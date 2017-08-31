@@ -18,10 +18,16 @@
 package Hardware.IDE.Commands;
 
 import static Hardware.IDE.ATARegister.ATA_SR_DSC;
+import Hardware.IDE.IDE;
 
 
 
 public final class Seek extends ATACommand {
+
+    public Seek(IDE ide) {
+        
+        super(ide);
+    }
 
     @Override
     public boolean onFirstExecute() {
@@ -32,8 +38,8 @@ public final class Seek extends ATACommand {
     @Override
     public void onExecute() {
         
-        m_drive.getRegister().status |= ATA_SR_DSC;
-        m_drive.requestIRQ();
+        m_currDrive.getRegister().status |= ATA_SR_DSC;
+        m_currDrive.requestIRQ();
     }
 
     @Override
