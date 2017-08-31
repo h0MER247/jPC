@@ -17,6 +17,7 @@
  */
 package Main.UI.MenuBar;
 
+import java.util.function.Consumer;
 import javax.swing.ButtonGroup;
 import javax.swing.JMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -36,10 +37,10 @@ public final class JPCMenuSystemSelection extends JMenu {
     
     
     
-    public void addSystemHandler(String systemName, Runnable handler) {
+    public void addSystemHandler(String systemName, Consumer<String> handler) {
         
         JRadioButtonMenuItem sysItem = new JRadioButtonMenuItem(systemName);
-        sysItem.addActionListener(a -> handler.run());
+        sysItem.addActionListener(a -> handler.accept(systemName));
         
         add(sysItem);
         m_grp.add(sysItem);

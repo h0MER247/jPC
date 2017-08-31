@@ -68,7 +68,7 @@ public final class JPCWindow extends JFrame {
     /* ----------------------------------------------------- *
      * Mouse grabber                                         *
      * ----------------------------------------------------- */
-    private MouseGrabber m_mouseGrabber;
+    private final MouseGrabber m_mouseGrabber;
     
     /* ----------------------------------------------------- *
      * Reference to the emulated system                      *
@@ -173,8 +173,8 @@ public final class JPCWindow extends JFrame {
         
         // System selection menu
         JPCMenuSystemSelection systemMenu = emulationMenu.getSystemSelectionMenu();
-        systemMenu.addSystemHandler(XTSystem.SYSTEM_NAME, () -> initSystem(new XTSystem(m_outputPanel)));
-        systemMenu.addSystemHandler(AT386System.SYSTEM_NAME, () -> initSystem(new AT386System(m_outputPanel)));
+        systemMenu.addSystemHandler(XTSystem.SYSTEM_NAME, this::initSystem);
+        systemMenu.addSystemHandler(AT386System.SYSTEM_NAME, this::initSystem);
         
         m_menuBar.updateUI();
     }
@@ -189,10 +189,11 @@ public final class JPCWindow extends JFrame {
         add(m_outputPanel, BorderLayout.CENTER);
     }
     
-    private void initSystem(JPCSystem system) {
+    private void initSystem(String systemName) {
         
+        // Tear down the previous selected system
         if(m_system != null) {
-
+            
             // Remove old keyboard and mouse listener
             removeKeyListener(m_system.getKeyAdapter());
             removeMouseListener(m_system.getMouseAdapter());
@@ -202,6 +203,30 @@ public final class JPCWindow extends JFrame {
             // Also remove the configuration menus
             m_systemMenus.forEach(menu -> m_menuBar.remove(menu));
             m_systemMenus.clear();
+        }
+        
+        // Initialize new system
+        JPCSystem system;
+        try {
+            
+            switch(systemName) {
+
+                case XTSystem.SYSTEM_NAME:
+                    system = new XTSystem(m_outputPanel);
+                    break;
+
+                case AT386System.SYSTEM_NAME:
+                    system = new AT386System(m_outputPanel);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Unknown system selected");
+            }
+        }
+        catch(IllegalArgumentException ex) {
+            
+            SwingDialogs.showExceptionMessage("Error while creating the system", ex);
+            return;
         }
         
         // Initialize keyboard and mouse listener
