@@ -90,6 +90,7 @@ public final class JPCOutputPanel extends JPanel
     private String m_statisticData;
     
     
+    
     public JPCOutputPanel() {
         
         setQuality(Quality.High);

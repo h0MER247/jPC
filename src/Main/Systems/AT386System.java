@@ -58,6 +58,6 @@ public final class AT386System extends JPCSystem {
         addComponent(new ATSystemRAM());
         addComponent(new BochsBios());
         addComponent(new Speaker());
-        addComponent(new CMOS(new File("at386.nvr")));
+        addComponent(new CMOS("at386.nvr"));
     }
 }

@@ -19,15 +19,10 @@ package Hardware.ROM;
 
 import Hardware.HardwareComponent;
 import MemoryMap.MemoryReadable;
+import Utility.FileResource;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import javax.xml.bind.DatatypeConverter;
 
 
 
@@ -37,6 +32,7 @@ public abstract class ROM implements HardwareComponent,
     /* ----------------------------------------------------- *
      * ROM data                                              *
      * ----------------------------------------------------- */
+    private static final String ROM_PATH = "data/roms";
     private int m_data[];
     
     /* ----------------------------------------------------- *
@@ -46,94 +42,21 @@ public abstract class ROM implements HardwareComponent,
     
     
     
-    public ROM(String resource, String md5Hash, int startAddress, int length, boolean isOptional) {
+    public ROM(String fileName, String expectedMD5Hash, int startAddress, int length, boolean isOptional) {
         
         m_startAddress = startAddress;
         
-        //
-        // Get input stream
-        //
-        URL url;
-        File file;
-        InputStream in = null;
-        
-        try {
-
-            // Try to read the rom image from a resource
-            if((url = getClass().getResource(resource)) != null) {
-                
-                in = url.openConnection().getInputStream();
-            }
-            // Try to read the rom image from a file
-            else if((file = new File(resource)).exists()) {
-
-                in = new FileInputStream(file);
-            }
-            // Report error
-            else if(!isOptional) {
-
-                throw new IOException(String.format("%s could not be found", resource));
-            }
-        }
-        catch(IOException ex) {
-
-            if(!isOptional)
-                throw new IllegalArgumentException("An error occured while reading the rom image", ex);
-        }
-        
-        //
-        // Initialize rom data
-        //
         m_data = new int[length];
         Arrays.fill(m_data, 0xff);
         
-        //
-        // Read rom data
-        //
-        if(in != null) {
+        try {
+        
+            FileResource.read(m_data, new File(ROM_PATH, fileName), expectedMD5Hash);
+        }
+        catch(IOException ex) {
             
-            try {
-                
-                // Initialize MD5 calculation
-                MessageDigest md = null;
-                try {
-
-                    md = MessageDigest.getInstance("MD5");
-                }
-                catch(NoSuchAlgorithmException ex) {
-                }
-
-                // Read file
-                byte[] buffer = new byte[32768];
-                int offset = 0;
-                
-                while(in.available() > 0) {
-                    
-                    int n;
-                    if((n = in.read(buffer, 0, Math.min(Math.min(in.available(), buffer.length), m_data.length))) <= 0)
-                        throw new IllegalStateException("What happened?");
-                    
-                    for(int i = 0; i < n; i++, offset++)
-                        m_data[offset] = buffer[i] & 0xff;
-
-                    if(md != null)
-                        md.update(buffer, 0, n);
-                }
-                
-                // Check MD5
-                if(md != null) {
-                    
-                    String computedHash = DatatypeConverter.printHexBinary(md.digest());
-                    if(md5Hash != null && !md5Hash.equals(computedHash))
-                        throw new IllegalArgumentException("The calculated MD5 hash doesn't match the expected value");
-                    
-                    //System.out.printf("%s: %s\n", resource, computedHash);
-                }
-            }
-            catch(IOException ex) {
-
-                throw new IllegalArgumentException("An error occured while reading the rom image", ex);
-            }
+            if(!isOptional)
+                throw new IllegalArgumentException("Error while reading the rom image " + fileName, ex);
         }
     }
     

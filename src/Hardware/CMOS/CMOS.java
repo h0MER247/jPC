@@ -23,10 +23,10 @@ import IOMap.IOReadable;
 import IOMap.IOWritable;
 import Scheduler.Schedulable;
 import Scheduler.Scheduler;
+import Utility.FileResource;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -114,15 +114,16 @@ public final class CMOS implements HardwareComponent,
     /* ----------------------------------------------------- *
      * CMOS non volatile ram                                 *
      * ----------------------------------------------------- */
-    private final int[] m_ram;
+    private static final String CMOS_PATH = "data/cmos";
     private final File m_ramFile;
+    private final int[] m_ram;
     private int m_address;
     
     
     
-    public CMOS(File ramFile) {
+    public CMOS(String ramFileName) {
         
-        m_ramFile = ramFile;
+        m_ramFile = new File(CMOS_PATH, ramFileName);
         m_ram = new int[0x80];
         
         m_calendar = new GregorianCalendar();
@@ -135,12 +136,14 @@ public final class CMOS implements HardwareComponent,
     @Override
     public void init() {
         
-        try(FileInputStream in = new FileInputStream(m_ramFile)) {
-            
-            for(int i = 0; i < 0x80; i++)
-                m_ram[i] = in.read() & 0xff;
-        } 
+        try {
+        
+            FileResource.read(m_ram, m_ramFile);
+        }
         catch(IOException ex) {
+            
+            Arrays.fill(m_ram, 0x00);
+            ex.printStackTrace(System.err);
         }
     }
     
@@ -182,12 +185,13 @@ public final class CMOS implements HardwareComponent,
     @Override
     public void shutdown() {
         
-        try(FileOutputStream out = new FileOutputStream(m_ramFile)) {
+        try {
             
-            for(int i = 0; i < 0x80; i++)
-                out.write(m_ram[i]);
+            FileResource.write(m_ram, m_ramFile);
         }
         catch(IOException ex) {
+            
+            ex.printStackTrace(System.err);
         }
     }
     
