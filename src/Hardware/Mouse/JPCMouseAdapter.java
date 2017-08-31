@@ -47,13 +47,15 @@ public final class JPCMouseAdapter extends MouseAdapter {
     @Override
     public void mouseDragged(MouseEvent me) {
      
-        setPosition(me.getX(), me.getY());
+        if(!me.isConsumed())
+            setPosition(me.getX(), me.getY());
     }
 
     @Override
     public void mouseMoved(MouseEvent me) {
         
-        setPosition(me.getX(), me.getY());
+        if(!me.isConsumed())
+            setPosition(me.getX(), me.getY());
     }
     
     @Override

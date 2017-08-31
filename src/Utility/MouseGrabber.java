@@ -139,23 +139,27 @@ public final class MouseGrabber {
             mx -= winCenterX;
             my -= winCenterY;
             
-            // Move cursor back to the center of the window
             if(mx != 0 || my != 0) {
                 
+                // Move cursor back to the center of the window
                 m_robot.mouseMove(
                         
                     winX + winCenterX,
                     winY + winCenterY
                 );
+                
+                // Translate the position accordingly so that all other listeners
+                // have no idea that the mouse grabber holds the mouse at a fixed
+                // position.
+                me.translatePoint(m_posX, m_posY);
+                
+                m_posX += mx;
+                m_posY += my;
             }
-            
-            // Translate the position accordingly so that all other listeners
-            // have no idea that the mouse grabber holds the mouse at a fixed
-            // position.
-            m_posX += mx;
-            m_posY += my;
-            
-            me.translatePoint(m_posX, m_posY);
+            else {
+                
+                me.consume();
+            }
         }
     }
     
