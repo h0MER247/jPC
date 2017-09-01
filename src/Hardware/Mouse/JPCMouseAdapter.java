@@ -20,6 +20,7 @@ package Hardware.Mouse;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import javax.swing.SwingUtilities;
 
 
 
@@ -61,20 +62,25 @@ public final class JPCMouseAdapter extends MouseAdapter {
     @Override
     public void mousePressed(MouseEvent me) {
         
-        setButtons(me, true);
+        if(!me.isConsumed())
+            setButtons(me, true);
     }
     
     @Override
     public void mouseReleased(MouseEvent me) {
         
-        setButtons(me, false);
+        if(!me.isConsumed())
+            setButtons(me, false);
     }
     
     @Override
     public void mouseWheelMoved(MouseWheelEvent mwe) {
         
-        m_deltaWheel += mwe.getWheelRotation();
-        m_hasChangedState = true;
+        if(!mwe.isConsumed()) {
+            
+            m_deltaWheel += mwe.getWheelRotation();
+            m_hasChangedState = true;
+        }
     }
     
     private void setPosition(int x, int y) {
@@ -86,9 +92,10 @@ public final class JPCMouseAdapter extends MouseAdapter {
     
     private void setButtons(MouseEvent me, boolean isPressed) {
         
-        if(me.getButton() == MouseEvent.BUTTON1) m_buttons[0] = isPressed;
-        if(me.getButton() == MouseEvent.BUTTON2) m_buttons[1] = isPressed;
-        if(me.getButton() == MouseEvent.BUTTON3) m_buttons[2] = isPressed;
+        if(SwingUtilities.isLeftMouseButton(me)) m_buttons[0] = isPressed;
+        if(SwingUtilities.isMiddleMouseButton(me)) m_buttons[1] = isPressed;
+        if(SwingUtilities.isRightMouseButton(me)) m_buttons[2] = isPressed;
+        
         m_hasChangedState = true;
     }
     

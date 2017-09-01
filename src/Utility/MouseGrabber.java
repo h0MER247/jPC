@@ -26,6 +26,7 @@ import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import javax.swing.SwingUtilities;
 
 
 
@@ -71,7 +72,7 @@ public final class MouseGrabber {
             // Create the grabbing handler
             m_handler = new MouseAdapter() {
                 
-                @Override public void mouseClicked(MouseEvent me) { onClick(me); }
+                @Override public void mousePressed(MouseEvent me) { onPress(me); }
                 @Override public void mouseDragged(MouseEvent me) { onMove(me); }
                 @Override public void mouseMoved(MouseEvent me) { onMove(me); }
             };
@@ -85,39 +86,35 @@ public final class MouseGrabber {
     
     
     
-    private void onClick(MouseEvent me) {
+    private void onPress(MouseEvent me) {
         
         if(m_robot == null)
             return;
-        
-        if(me.getClickCount() == 2) {
+           
+        if(me.getClickCount() >= 2) {
             
-            switch(me.getButton()) {
+            if(SwingUtilities.isLeftMouseButton(me) && !m_isGrabbed) {
                 
-                // Left mouse button
-                case MouseEvent.BUTTON1:
-                    if(!m_isGrabbed) {
-                        
-                        m_isGrabbed = true;
-                        m_component.setCursor(m_invisibleCursor);
-                        
-                        if(m_onMouseGrabbed != null)
-                            m_onMouseGrabbed.run();
-                    }
-                    break;
-                    
-                // Right mouse button
-                case MouseEvent.BUTTON3:
-                    if(m_isGrabbed) {
-                        
-                        m_isGrabbed = false;
-                        m_component.setCursor(Cursor.getDefaultCursor());
-                        
-                        if(m_onMouseGrabbed != null)
-                            m_onMouseGrabbed.run();
-                    }
-                    break;
+                m_isGrabbed = true;
+                me.consume();
             }
+            else if(SwingUtilities.isRightMouseButton(me) && m_isGrabbed) {
+                
+                m_isGrabbed = false;
+                me.consume();
+            }
+            else {
+                
+                return;
+            }
+
+            if(m_isGrabbed)
+                m_component.setCursor(m_invisibleCursor);
+            else
+                m_component.setCursor(Cursor.getDefaultCursor());
+
+            if(m_onMouseGrabbed != null)
+                m_onMouseGrabbed.run();
         }
     }
     
