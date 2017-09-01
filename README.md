@@ -37,7 +37,7 @@
 </p>
 
 ### Example Drive Image
- - [jPC_HDD.zip] contains an preinstalled [Caldera Open DOS 7.01], DOS Controller and some shareware classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill and others.
+ - [jPC_HDD_386.zip] contains an preinstalled [FreeDos 1.2], and some shareware classics like CD Man, Commander Keen, Dr. Rudy, Jetpack, Jill Of The Jungle, Overkill and others. Unfortunately, this image will not work with the XT System.
  
 ### Prerequisites
 The project requires the Tseng ET 4000 BIOS ROM (and optionally the IBM Basic) which I can't give you. You have to "find" them yourself - for educational purposes of course :).
@@ -58,8 +58,8 @@ The project requires the Tseng ET 4000 BIOS ROM (and optionally the IBM Basic) w
   
 Have fun.
 
-[jPC_HDD.zip]:https://github.com/h0MER247/jPC/files/1025898/jPC_HDD.zip
-[Caldera Open DOS 7.01]:http://ftp.uni-bayreuth.de/pc/caldera/OpenDOS.701/
+[jPC_HDD_386.zip]:https://drive.google.com/open?id=0Bz5nACfDyxSrYTJ2OEFqaTdJRXM
+[FreeDos 1.2]:http://www.freedos.org/
 [WinImage]:http://www.winimage.com/download.htm
 [et4000.bin]:https://www.google.com/?#q=%22et4000.bin%22!+file
 [basicc11.bin]:https://www.google.com/?#q=%22basicc11.bin%22!+file
