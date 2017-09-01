@@ -2,17 +2,7 @@ package Hardware.IDE;
 
 import Hardware.HardwareComponent;
 import static Hardware.IDE.ATARegister.*;
-import Hardware.IDE.Commands.ATACommand;
-import Hardware.IDE.Commands.DriveDiagnostic;
-import Hardware.IDE.Commands.Identify;
-import Hardware.IDE.Commands.InitDriveParams;
-import Hardware.IDE.Commands.AtapiIdentify;
-import Hardware.IDE.Commands.ReadPIO;
-import Hardware.IDE.Commands.ReadVerifyPIO;
-import Hardware.IDE.Commands.Recalibrate;
-import Hardware.IDE.Commands.Seek;
-import Hardware.IDE.Commands.SetFeatures;
-import Hardware.IDE.Commands.WritePIO;
+import Hardware.IDE.Commands.*;
 import Hardware.InterruptController.PICs;
 import IOMap.IOReadable;
 import IOMap.IOWritable;
@@ -22,7 +12,7 @@ import Main.Systems.ComponentConfig.Type;
 
 
 /**
- * Known issues: - No LBA support and no DMA transfers atm
+ * Known issues: - No DMA transfers atm
  *               - Only a few commands implemented
  *               - Public variables in ATARegister.java
  */
