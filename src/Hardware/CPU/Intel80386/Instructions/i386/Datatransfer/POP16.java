@@ -17,6 +17,7 @@
  */
 package Hardware.CPU.Intel80386.Instructions.i386.Datatransfer;
 
+import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
 import Hardware.CPU.Intel80386.Operands.Operand;
@@ -38,7 +39,17 @@ public final class POP16 extends Instruction {
     @Override
     public void run() {
         
-        m_destination.setValue(m_cpu.popStack16());
+        int oldESP = m_cpu.ESP.getValue();
+        try {
+        
+            m_destination.setValue(m_cpu.popStack16());
+        }
+        catch(CPUException ex) {
+            
+            m_cpu.ESP.setValue(oldESP);
+            
+            throw ex;
+        }
     }
     
     @Override

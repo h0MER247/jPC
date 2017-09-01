@@ -2946,7 +2946,7 @@ public final class Decoder {
             ( /* 0x9a: call imm16:16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new CALL_FAR(cpu, buildIMM32(), buildIMM16(), true) :
-                                                               new CALL_FAR(cpu, buildIMM16(), buildIMM16(), false));
+                                                  new CALL_FAR(cpu, buildIMM16(), buildIMM16(), false));
             },
 
             ( /* 0x9b: wait */ ) -> {
@@ -3235,13 +3235,13 @@ public final class Decoder {
             ( /* 0xc2: ret imm16 */ ) -> {
                 
                 return finish(isOperandSize32() ? new RET_NEAR(cpu, buildIMM16(), true) :
-                                                               new RET_NEAR(cpu, buildIMM16(), false));
+                                                  new RET_NEAR(cpu, buildIMM16(), false));
             },
             
             ( /* 0xc3: ret */ ) -> {
                 
                 return finish(isOperandSize32() ? new RET_NEAR(cpu, null, true) :
-                                                               new RET_NEAR(cpu, null, false));
+                                                  new RET_NEAR(cpu, null, false));
             },
 
             ( /* 0xc4: les r16/32, m16/32 */ ) -> {
@@ -3296,13 +3296,13 @@ public final class Decoder {
             ( /* 0xca: retf imm16 */ ) -> {
                 
                 return finish(isOperandSize32() ? new RET_FAR(cpu, buildIMM16(), true) :
-                                                           new RET_FAR(cpu, buildIMM16(), false));
+                                                  new RET_FAR(cpu, buildIMM16(), false));
             },
 
             ( /* 0xcb: retf */ ) -> {
                 
                 return finish(isOperandSize32() ? new RET_FAR(cpu, null, true) :
-                                                           new RET_FAR(cpu, null, false));
+                                                  new RET_FAR(cpu, null, false));
             },
 
             ( /* 0xcc: int 3h */ ) -> {
@@ -3323,7 +3323,7 @@ public final class Decoder {
             ( /* 0xcf: iret */ ) -> {
                 
                 return finish(isOperandSize32() ? new IRET(cpu, true) :
-                                                           new IRET(cpu, false));
+                                                  new IRET(cpu, false));
             },
 
             ( /* 0xd0: grp2 rm8, 1 */ ) -> {
@@ -3604,19 +3604,19 @@ public final class Decoder {
             ( /* 0xe8: call rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new CALL_NEAR(cpu, buildIPRelativeIMM32(), true) :
-                                                           new CALL_NEAR(cpu, buildIPRelativeIMM16(), false));
+                                                  new CALL_NEAR(cpu, buildIPRelativeIMM16(), false));
             },
             
             ( /* 0xe9: jmp rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP(cpu, buildIPRelativeIMM32()) :
-                                                           new JMP(cpu, buildIPRelativeIMM16()));
+                                                  new JMP(cpu, buildIPRelativeIMM16()));
             },
             
             ( /* 0xea: jmp far imm16:16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_FAR(cpu, buildIMM32(), buildIMM16(), true) :
-                                                           new JMP_FAR(cpu, buildIMM16(), buildIMM16(), false));
+                                                  new JMP_FAR(cpu, buildIMM16(), buildIMM16(), false));
             },
 
             ( /* 0xeb: jmp rel8 */ ) -> {
@@ -3819,7 +3819,7 @@ public final class Decoder {
                     /* call rm16/32 */
                     case 2:
                         return finish(isOperandSize32() ? new CALL_NEAR(cpu, buildRM32(), true) :
-                                                                   new CALL_NEAR(cpu, buildRM16(), false));
+                                                          new CALL_NEAR(cpu, buildRM16(), false));
                         
                     /* call m16:16/32 */
                     case 3:
@@ -3827,12 +3827,12 @@ public final class Decoder {
                             throw CPUException.getInvalidOpcode();
                         
                         return finish(isOperandSize32() ? new CALL_FAR(cpu, buildMEM32(0), buildMEM16(4), true) :
-                                                                   new CALL_FAR(cpu, buildMEM16(0), buildMEM16(2), false));
+                                                          new CALL_FAR(cpu, buildMEM16(0), buildMEM16(2), false));
                         
                     /* jmp rm16/32 */
                     case 4:
                         return finish(isOperandSize32() ? new JMP(cpu, buildRM32()) :
-                                                                   new JMP(cpu, buildRM16()));
+                                                          new JMP(cpu, buildRM16()));
                         
                     /* jmp m16:16/32 */
                     case 5:
@@ -3840,7 +3840,7 @@ public final class Decoder {
                             throw CPUException.getInvalidOpcode();
                         
                         return finish(isOperandSize32() ? new JMP_FAR(cpu, buildMEM32(0), buildMEM16(4), true) :
-                                                                   new JMP_FAR(cpu, buildMEM16(0), buildMEM16(2), false));
+                                                          new JMP_FAR(cpu, buildMEM16(0), buildMEM16(2), false));
                         
                     /* push rm16/32 */
                     case 6:
