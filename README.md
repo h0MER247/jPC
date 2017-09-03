@@ -48,7 +48,7 @@ The project requires the Tseng ET 4000 BIOS ROM (and optionally the IBM Basic) w
    
 ### Starting
  - Compile the project
- - Place et4000.bin (and optionally basicc11.bin) in the same directory as jPC.jar or put them in the respective folders at src/Hardware/ROM/... before you compile the project.
+ - Place et4000.bin (and optionally basicc11.bin) into the folder ./data/roms/ before you start the project.
  
 ### Compiled project
  - You'll find a [compiled] version of the project in the corresponding issues thread.
