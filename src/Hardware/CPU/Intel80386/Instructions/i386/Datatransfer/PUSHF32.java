@@ -20,6 +20,7 @@ package Hardware.CPU.Intel80386.Instructions.i386.Datatransfer;
 import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
+import Hardware.CPU.Intel80386.Register.Flags.Flags;
 
 
 
@@ -40,7 +41,11 @@ public final class PUSHF32 extends Instruction {
             if(m_cpu.FLAGS.VM && m_cpu.FLAGS.IOPL != 3)
                 throw CPUException.getGeneralProtectionFault(0);
 
-            m_cpu.pushStack32(m_cpu.FLAGS.getValue());
+            // VM and RF flag are never pushed on the stack and always read as 0
+            int flags = m_cpu.FLAGS.getValue();
+            flags &= ~(Flags.MASK_VM_8086 | Flags.MASK_RESUME);
+            
+            m_cpu.pushStack32(flags);
         }
         catch(CPUException ex) {
             
@@ -53,6 +58,6 @@ public final class PUSHF32 extends Instruction {
     @Override
     public String toString() {
         
-        return "pushf";
+        return "pushfd";
     }
 }
