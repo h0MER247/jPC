@@ -33,45 +33,27 @@ public final class POPF32 extends Instruction {
     
     @Override
     public void run() {
+            
+        if(m_cpu.FLAGS.VM && m_cpu.FLAGS.IOPL != 3)
+            throw CPUException.getGeneralProtectionFault(0);
         
         int oldESP = m_cpu.ESP.getValue();
         try {
         
-            int flags = m_cpu.popStack32();
+            // All unprivileged flags can change with a POPF
+            int mask = Flags.MASK_UNPRIVILEGED_EFLAGS;
+            
+            // IOPL can change if CPL == 0
+            if(m_cpu.getCPL() == 0)
+                mask |= Flags.MASK_IOPL;
+            
+            // IF does change when executing at a privilege level at least
+            // as privileged as IOPL
+            if(m_cpu.getCPL() <= m_cpu.FLAGS.IOPL)
+                mask |= Flags.MASK_INTERRUPT_ENABLE;
 
-            // Mask privileged and reserved flags, RF and VM never changes with popf/popfd
-            int mask = Flags.MASK_EFLAGS & ~(Flags.MASK_INTERRUPT_ENABLE |
-                                             Flags.MASK_IOPL             |
-                                             Flags.MASK_RESUME           |
-                                             Flags.MASK_VM_8086);
-
-            if(!m_cpu.CR.isInRealMode()) {
-
-                if(m_cpu.FLAGS.VM) {
-
-                    if(m_cpu.FLAGS.IOPL != 3)
-                        throw CPUException.getGeneralProtectionFault(0);
-
-                    mask |= Flags.MASK_INTERRUPT_ENABLE;
-                }
-                else {
-
-                    // IOPL can change if CPL == 0
-                    if(m_cpu.getCPL() == 0)
-                        mask |= Flags.MASK_IOPL;
-
-                    // IF can change if CPL <= IOPL
-                    if(m_cpu.getCPL() <= m_cpu.FLAGS.IOPL)
-                        mask |= Flags.MASK_INTERRUPT_ENABLE;
-                }
-            }
-            else {
-
-                mask |= Flags.MASK_INTERRUPT_ENABLE |
-                        Flags.MASK_IOPL;
-            }
-
-            m_cpu.FLAGS.setValue(flags, mask);
+            
+            m_cpu.FLAGS.setValue(m_cpu.popStack32(), mask);
         }
         catch(CPUException ex) {
             
@@ -84,6 +66,6 @@ public final class POPF32 extends Instruction {
     @Override
     public String toString() {
         
-        return "popf";
+        return "popfd";
     }
 }

@@ -68,8 +68,7 @@ public final class CALL_FAR extends Instruction {
         
         // Get new CS:EIP
         int cs = m_cs.getValue() & 0xffff;
-        int ip = m_is32 ? m_eip.getValue() :
-                          m_eip.getValue() & 0xffff;
+        int ip = m_eip.getValue();
         
         // Push return address
         if(m_is32) {
@@ -81,6 +80,8 @@ public final class CALL_FAR extends Instruction {
 
             m_cpu.pushStack16(m_cpu.CS.getSelector());
             m_cpu.pushStack16(m_cpu.EIP.getValue());
+            
+            ip &= 0xffff;
         }
 
         // Load CS:EIP
@@ -92,8 +93,7 @@ public final class CALL_FAR extends Instruction {
         
         // Get new CS:EIP
         int cs = m_cs.getValue() & 0xffff;
-        int ip = m_is32 ? m_eip.getValue() :
-                          m_eip.getValue() & 0xffff;
+        int ip = m_eip.getValue();
         
         // Push return address
         if(m_is32) {
@@ -105,6 +105,8 @@ public final class CALL_FAR extends Instruction {
 
             m_cpu.pushStack16(m_cpu.CS.getSelector());
             m_cpu.pushStack16(m_cpu.EIP.getValue());
+            
+            ip &= 0xffff;
         }
         
         // Load CS:EIP

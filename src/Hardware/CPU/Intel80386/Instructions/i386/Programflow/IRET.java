@@ -61,25 +61,25 @@ public final class IRET extends Instruction {
     
     private void IRET_REALMODE() {
         
-        int cs, eip, flags;
+        int cs, ip, flags;
         
         // Read return address and flags
         if(m_is32) {
 
-            eip = m_cpu.popStack32();
+            ip = m_cpu.popStack32();
             cs = m_cpu.popStack32() & 0xffff;
             flags = m_cpu.popStack32();
         }
         else {
 
-            eip = m_cpu.popStack16();
+            ip = m_cpu.popStack16();
             cs = m_cpu.popStack16();
             flags = m_cpu.popStack16();
         }
 
         // Load CS:EIP
         m_cpu.CS.loadRealMode(cs);
-        m_cpu.EIP.setValue(eip);
+        m_cpu.EIP.setValue(ip);
         
         // Load flags
         m_cpu.FLAGS.setValue(flags, m_is32 ? Flags.MASK_EFLAGS : Flags.MASK_FLAGS);
@@ -90,19 +90,19 @@ public final class IRET extends Instruction {
         if(m_cpu.FLAGS.IOPL != 3)
             throw CPUException.getGeneralProtectionFault(0);
 
-        int cs, eip, flags, flagMask;
+        int cs, ip, flags, flagMask;
         
         // Read return address and flags
         if(m_is32) {
 
-            eip = m_cpu.popStack32();
+            ip = m_cpu.popStack32();
             cs = m_cpu.popStack32() & 0xffff;
             flags = m_cpu.popStack32();
             flagMask = Flags.MASK_EFLAGS;
         }
         else {
 
-            eip = m_cpu.popStack16();
+            ip = m_cpu.popStack16();
             cs = m_cpu.popStack16();
             flags = m_cpu.popStack16();
             flagMask = Flags.MASK_FLAGS;
@@ -110,7 +110,7 @@ public final class IRET extends Instruction {
         
         // Load CS:EIP
         m_cpu.CS.loadVirtualMode(cs);
-        m_cpu.EIP.setValue(eip);
+        m_cpu.EIP.setValue(ip);
 
         // Load flags (VM and IOPL are not modified)
         m_cpu.FLAGS.setValue(flags, flagMask & ~(Flags.MASK_VM_8086 | Flags.MASK_IOPL));
@@ -129,22 +129,22 @@ public final class IRET extends Instruction {
         else {
             
             // Read return address and flags
-            int cs, eip, flags;
+            int cs, ip, flags;
             if(m_is32) {
 
-                eip = m_cpu.popStack32();
+                ip = m_cpu.popStack32();
                 cs = m_cpu.popStack32() & 0xffff;
                 flags = m_cpu.popStack32();
                 
                 if((flags & Flags.MASK_VM_8086) != 0) {
                     
-                    IRET_RETURN_TO_V86(cs, eip, flags);
+                    IRET_RETURN_TO_V86(cs, ip, flags);
                     return;
                 }
             }
             else {
 
-                eip = m_cpu.popStack16();
+                ip = m_cpu.popStack16();
                 cs = m_cpu.popStack16();
                 flags = m_cpu.popStack16();
             }
@@ -182,15 +182,15 @@ public final class IRET extends Instruction {
                 throw CPUException.getSegmentNotPresent(cs & 0xfffc);
             
             // Instruction pointer must be within code segment limits
-            if(descCS.isOutsideLimit(eip, 1))
+            if(descCS.isOutsideLimit(ip, 1))
                 throw CPUException.getGeneralProtectionFault(0);
 
 
             // Perform the return
             if(m_cpu.getSelectorsRPL(cs) == CPL)
-                IRET_RETURN_TO_SAME_LEVEL(cs, eip, flags, flagMask, descCS, CPL);
+                IRET_RETURN_TO_SAME_LEVEL(cs, ip, flags, flagMask, descCS, CPL);
             else
-                IRET_RETURN_TO_OUTER_LEVEL(cs, eip, flags, flagMask, descCS, CPL);
+                IRET_RETURN_TO_OUTER_LEVEL(cs, ip, flags, flagMask, descCS, CPL);
         }
     }
     
@@ -221,7 +221,7 @@ public final class IRET extends Instruction {
         m_cpu.TR.switchToTask(tssSelector, tssDesc, TaskRegister.TASKSWITCH_IRET);
     }
     
-    private void IRET_RETURN_TO_V86(int cs, int eip, int flags) {
+    private void IRET_RETURN_TO_V86(int cs, int ip, int flags) {
         
         // Pop new stack segment & pointer
         int sp = m_cpu.popStack32();
@@ -248,10 +248,10 @@ public final class IRET extends Instruction {
 
         // Load CS:EIP
         m_cpu.CS.loadVirtualMode(cs);
-        m_cpu.EIP.setValue(eip);
+        m_cpu.EIP.setValue(ip);
     }
     
-    private void IRET_RETURN_TO_SAME_LEVEL(int cs, int eip, int flags, int flagMask, Descriptor descCS, int CPL) {
+    private void IRET_RETURN_TO_SAME_LEVEL(int cs, int ip, int flags, int flagMask, Descriptor descCS, int CPL) {
         
         // If non-conforming then code segment DPL must be equal to CPL
         if(descCS.getTypeInfo().isNonConformingCodeSegment()) {
@@ -268,13 +268,13 @@ public final class IRET extends Instruction {
 
         // Load CS:EIP
         m_cpu.CS.loadProtectedMode(cs, descCS);
-        m_cpu.EIP.setValue(eip);
+        m_cpu.EIP.setValue(ip);
 
         // Load flags
         m_cpu.FLAGS.setValue(flags, flagMask);
     }
     
-    private void IRET_RETURN_TO_OUTER_LEVEL(int cs, int eip, int flags, int flagMask, Descriptor descCS, int CPL) {
+    private void IRET_RETURN_TO_OUTER_LEVEL(int cs, int ip, int flags, int flagMask, Descriptor descCS, int CPL) {
         
         // If non-conforming then code segment DPL must be equal to the CS selectors RPL
         if(descCS.getTypeInfo().isNonConformingCodeSegment()) {
@@ -331,7 +331,7 @@ public final class IRET extends Instruction {
         
         // Load CS:EIP
         m_cpu.CS.loadProtectedMode(cs, descCS);
-        m_cpu.EIP.setValue(eip);
+        m_cpu.EIP.setValue(ip);
         
         // Load SS:SP
         m_cpu.SS.loadProtectedMode(ss, descSS);

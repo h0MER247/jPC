@@ -45,15 +45,22 @@ public final class CALL_NEAR extends Instruction {
         int oldESP = m_cpu.ESP.getValue();
         try {
         
-            int eip = m_is32 ? m_eip.getValue() :
-                               m_eip.getValue() & 0xffff;
+            int ip = m_eip.getValue();
             
             // Push return address
-            if(m_is32) m_cpu.pushStack32(m_cpu.EIP.getValue());
-            else       m_cpu.pushStack16(m_cpu.EIP.getValue());
+            if(m_is32) {
+                
+                m_cpu.pushStack32(m_cpu.EIP.getValue());
+            }
+            else {
+                
+                m_cpu.pushStack16(m_cpu.EIP.getValue());
+                
+                ip &= 0xffff;
+            }
 
             // Update EIP
-            m_cpu.EIP.setValue(eip);
+            m_cpu.EIP.setValue(ip);
         }
         catch(CPUException ex) {
             

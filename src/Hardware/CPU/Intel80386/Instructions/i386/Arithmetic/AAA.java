@@ -37,9 +37,12 @@ public final class AAA extends Instruction {
 
         if(((al & 0x0f) > 0x09) || m_cpu.FLAGS.AF) {
 
-            al = al + 0x06;
             ah = ah + 0x01;
-
+            al = al + 0x06;
+            
+            m_cpu.AH.setValue(ah);
+            m_cpu.AL.setValue(al & 0x0f);
+            
             m_cpu.FLAGS.CF = true;
             m_cpu.FLAGS.AF = true;
         }
@@ -48,11 +51,6 @@ public final class AAA extends Instruction {
             m_cpu.FLAGS.CF = false;
             m_cpu.FLAGS.AF = false;
         }
-
-        al &= 0x0f;
-
-        m_cpu.AH.setValue(ah);
-        m_cpu.AL.setValue(al);
     }
     
     @Override
