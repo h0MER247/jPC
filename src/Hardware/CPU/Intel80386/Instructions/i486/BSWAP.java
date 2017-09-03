@@ -15,41 +15,43 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package Hardware.CPU.Intel80386.Register.Segments;
+package Hardware.CPU.Intel80386.Instructions.i486;
 
-import Hardware.CPU.Intel80386.Exceptions.CPUException;
+import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
+import Hardware.CPU.Intel80386.Operands.Operand;
 
 
 
-public final class StackSegment extends Segment {
+public final class BSWAP extends Instruction {
 
-    public StackSegment(String name, Intel80386 cpu) {
+    private final Operand m_destination;
+    
+    public BSWAP(Intel80386 cpu,
+                 Operand destination) {
         
-        super(name, cpu);
+        super(cpu);
+        
+        m_destination = destination;
+    }
+
+    @Override
+    public void run() {
+        
+        int dst = m_destination.getValue();
+        
+        // Swap bits 0..7 with bits 24..31 and 8..15 with 16..23
+        int res;
+        res = (dst << 24) & 0xff000000;
+        res |= (dst << 8) & 0x00ff0000;
+        res |= (dst >>> 8) & 0x0000ff00;
+        res |= (dst >>> 24) & 0x000000ff;
+        m_destination.setValue(res);
     }
     
     @Override
-    public void checkProtectionRead(int offset, int size) {
+    public String toString() {
         
-        if(isInvalid())
-            throw CPUException.getStackFault(0);
-        
-        if(isOutsideLimit(offset, size))
-            throw CPUException.getStackFault(0);
-        
-        // TODO: Check Alignment (486+)
-    }
-
-    @Override
-    public void checkProtectionWrite(int offset, int size) {
-        
-        if(isInvalid())
-            throw CPUException.getStackFault(0);
-        
-        if(isOutsideLimit(offset, size))
-            throw CPUException.getStackFault(0);
-        
-        // TODO: Check Alignment (486+)
+        return String.format("bswap %s", m_destination.toString());
     }
 }

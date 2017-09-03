@@ -163,6 +163,11 @@ public final class MMU implements HardwareComponent {
         m_tlb.clear();
     }
     
+    public void invalidatePage(int address) {
+        
+        throw new UnsupportedOperationException("Implement me");
+    }
+    
     public int getPhysicalAddress(int linearAddress, boolean isWrite, boolean isUserAccess) {
         
         if(m_isPagingEnabled) {

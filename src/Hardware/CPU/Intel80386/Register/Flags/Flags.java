@@ -17,6 +17,8 @@
  */
 package Hardware.CPU.Intel80386.Register.Flags;
 
+import Hardware.CPU.Intel80386.Intel80386;
+
 
 
 public final class Flags {
@@ -37,25 +39,30 @@ public final class Flags {
     public static final int MASK_NESTED_TASK = 0x00004000;
     public static final int MASK_RESUME = 0x00010000;
     public static final int MASK_VM_8086 = 0x00020000;
+    public static final int MASK_ALIGN_CHECK = 0x00040000;
     public static final int MASK_FLAGS = 0x00007fd5;
-    public static final int MASK_EFLAGS = 0x00037fd5;
+    public static final int MASK_EFLAGS = 0x00077fd5;
+    public static final int MASK_UNPRIVILEGED_FLAGS = 0x00004dd5;
+    public static final int MASK_UNPRIVILEGED_EFLAGS = 0x00044dd5;
+    private final int m_capabilityMask;
     
     /* ----------------------------------------------------- *
      * Flagregister content                                  *
      * ----------------------------------------------------- */
-    public boolean CF;              /* Carry Flag            */
-    public boolean PF;              /* Parity Flag           */
-    public boolean AF;              /* Auxiliary Carry Flag  */
-    public boolean ZF;              /* Zero Flag             */
-    public boolean SF;              /* Sign Flag             */
-    public boolean TF;              /* Trap Flag             */
-    public boolean IF;              /* Interrupt Enable Flag */
-    public boolean DF;              /* Direction Flag        */
-    public boolean OF;              /* Overflow Flag         */
-    public boolean NT;              /* Nested Task Level     */
-    public boolean RF;              /* Resume Flag           */
-    public boolean VM;              /* Virtual 8086 Mode     */
-    public int IOPL;                /* I/O Privilege Level   */
+    public boolean CF; // Carry Flag
+    public boolean PF; // Parity Flag
+    public boolean AF; // Auxiliary Carry Flag
+    public boolean ZF; // Zero Flag
+    public boolean SF; // Sign Flag
+    public boolean TF; // Trap Flag
+    public boolean IF; // Interrupt Enable Flag
+    public boolean DF; // Direction Flag
+    public boolean OF; // Overflow Flag
+    public boolean NT; // Nested Task Level
+    public boolean RF; // Resume Flag
+    public boolean VM; // Virtual 8086 Mode
+    public boolean AC; // Alignment Check (486+)
+    public int IOPL;   // I/O Privilege Level
     
     /* ----------------------------------------------------- *
      * Parity Lookup Table                                   *
@@ -64,7 +71,7 @@ public final class Flags {
     
     
     
-    public Flags() {
+    public Flags(Intel80386 cpu) {
         
         m_parityLUT = new boolean[0x100];
         for(int i = 0; i < 0x100; i++) {
@@ -77,6 +84,24 @@ public final class Flags {
             }
             
             m_parityLUT[i] = (bitCount & 0x01) == 0;
+        }
+        
+        // TODO: Maybe there is a better solution to this problem than masking
+        //       away all flags that aren't supported by a particular cpu
+        switch(cpu.getCPUType()) {
+            
+            // The i386 cpu doesn't have the alignment check flag
+            case i386:
+                m_capabilityMask = MASK_EFLAGS & ~MASK_ALIGN_CHECK;
+                break;
+            
+            // The i486 has all currently available flags
+            case i486:
+                m_capabilityMask = MASK_EFLAGS;
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Unknown cpu type");
         }
     }
     
@@ -96,6 +121,7 @@ public final class Flags {
         NT = false;
         RF = false;
         VM = false;
+        AC = false;
         
         IOPL = 0;
     }
@@ -104,6 +130,10 @@ public final class Flags {
     
     public void setValue(int value, int changeMask) {
         
+        changeMask &= m_capabilityMask;
+        
+        if((changeMask & MASK_ALIGN_CHECK) != 0)
+            AC = (value & MASK_ALIGN_CHECK) != 0;
         if((changeMask & MASK_VM_8086) != 0)
             VM = (value & MASK_VM_8086) != 0;
         if((changeMask & MASK_RESUME) != 0)
@@ -136,6 +166,7 @@ public final class Flags {
         
         int flags = 0x00000002 | (IOPL << 12);
         
+        if(AC) flags |= MASK_ALIGN_CHECK;
         if(VM) flags |= MASK_VM_8086;
         if(RF) flags |= MASK_RESUME;
         if(NT) flags |= MASK_NESTED_TASK;
@@ -149,7 +180,7 @@ public final class Flags {
         if(PF) flags |= MASK_PARITY;
         if(CF) flags |= MASK_CARRY;
         
-        return flags;
+        return flags & m_capabilityMask;
     }
     
     
@@ -180,8 +211,9 @@ public final class Flags {
     @Override
     public String toString() {
         
-        String flags = String.format("%s%s%s[%02x]%s%s%s%s%s%s%s%s%s",
+        String flags = String.format("%s%s%s%s[%02x]%s%s%s%s%s%s%s%s%s",
                     
+            AC ? "A" : "a",
             VM ? "V" : "v",
             RF ? "R" : "r",
             NT ? "N" : "n",

@@ -15,44 +15,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package Hardware.CPU.Intel80386.Register.Segments;
+package Hardware.CPU.Intel80386.Instructions.i486;
 
 import Hardware.CPU.Intel80386.Exceptions.CPUException;
+import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
 
 
 
-public final class DataSegment extends Segment {
+public final class INVD extends Instruction {
 
-    public DataSegment(String name, Intel80386 cpu) {
+    public INVD(Intel80386 cpu) {
         
-        super(name, cpu);
+        super(cpu);
+    }
+
+    @Override
+    public void run() {
+        
+        if(m_cpu.getCPL() != 0)
+            throw CPUException.getGeneralProtectionFault(0);
+        
+        // Cache isn't implemented, so there's nothing to invalidate.
     }
     
     @Override
-    public void checkProtectionRead(int offset, int size) {
+    public String toString() {
         
-        if(isInvalid())
-            throw CPUException.getGeneralProtectionFault(0);
-        
-        if(isOutsideLimit(offset, size))
-            throw CPUException.getGeneralProtectionFault(0);
-        
-        // TODO: Check Alignment (486+)
-    }
-    
-    @Override
-    public void checkProtectionWrite(int offset, int size) {
-        
-        if(isInvalid())
-            throw CPUException.getGeneralProtectionFault(0);
-        
-        if(!isWritable())
-            throw CPUException.getGeneralProtectionFault(0);
-        
-        if(isOutsideLimit(offset, size))
-            throw CPUException.getGeneralProtectionFault(0);
-        
-        // TODO: Check Alignment (486+)
+        return "invd";
     }
 }

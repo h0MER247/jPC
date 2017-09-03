@@ -17,6 +17,7 @@
  */
 package Hardware.CPU.Intel80386.Register.Control;
 
+import Hardware.CPU.Intel80386.Intel80386;
 import Hardware.CPU.Intel80386.MMU.MMU;
 
 
@@ -26,11 +27,11 @@ public final class Control {
     /* ----------------------------------------------------- *
      * Controlregister 0 bitmasks                            *
      * ----------------------------------------------------- */
-    public static final int CR0_PROTECTION_ENABLED = 1;
-    public static final int CR0_MATH_PRESENT = 1 << 1;
-    public static final int CR0_EMULATION = 1 << 2;
-    public static final int CR0_TASK_SWITCHED = 1 << 3;
-    public static final int CR0_EXTENSION_TYPE = 1 << 4;
+    private static final int CR0_PROTECTION_ENABLED = 1;
+    private static final int CR0_MATH_PRESENT = 1 << 1;
+    private static final int CR0_EMULATION = 1 << 2;
+    private static final int CR0_TASK_SWITCHED = 1 << 3;
+    private static final int CR0_EXTENSION_TYPE = 1 << 4;
     public static final int CR0_PAGING_ENABLED = 1 << 31;
     
     /* ----------------------------------------------------- *
@@ -39,26 +40,27 @@ public final class Control {
     private int m_cr0;
     
     /* ----------------------------------------------------- *
-     * Reference to the memory management unit               *
+     * Reference to the cpu and memory management unit       *
      * ----------------------------------------------------- */
+    private final Intel80386 m_cpu;
     private final MMU m_mmu;
     
     
     
-    public Control(MMU mmu) {
+    public Control(Intel80386 cpu) {
         
-        m_mmu = mmu;
+        m_cpu = cpu;
+        m_mmu = cpu.getMMU();
     }
     
     
     
     public void reset() {
         
-        setCR0(0);
+        setCR0(m_cpu.hasFPU() ? CR0_MATH_PRESENT | CR0_EXTENSION_TYPE : 0);
         setCR2(0);
         setCR3(0);
     }
-    
     
     
     
@@ -79,10 +81,6 @@ public final class Control {
     }
         
     public void setCR0(int val) {
-        
-        // Flush the TLB if paging or protected mode gets enabled
-        //if((((m_cr0 ^ val) & val) & (CR0_PAGING_ENABLED | CR0_PROTECTION_ENABLED)) != 0)
-        //    m_mmu.flushTLB();
         
         m_cr0 = val | 0x7ffffff0;
         m_mmu.setPagingEnabled((m_cr0 & CR0_PAGING_ENABLED) != 0);

@@ -29,12 +29,14 @@ import Hardware.CPU.Intel80386.Instructions.i386.Repeats.*;
 import Hardware.CPU.Intel80386.Instructions.i386.Shifts.*;
 import Hardware.CPU.Intel80386.Instructions.i386.Stack.*;
 import Hardware.CPU.Intel80386.Instructions.i386.String.*;
+import Hardware.CPU.Intel80386.Instructions.i486.*;
 import Hardware.CPU.Intel80386.Codeblock.CodeBlock;
 import Hardware.CPU.Intel80386.Condition.Condition;
 import Hardware.CPU.Intel80386.Condition.Conditions.*;
 import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
+import Hardware.CPU.Intel80386.Intel80386.CPUType;
 import Hardware.CPU.Intel80386.MMU.MMU;
 import Hardware.CPU.Intel80386.Operands.Immediate.OperandImmediate;
 import Hardware.CPU.Intel80386.Operands.Memory.OperandMemory;
@@ -70,9 +72,16 @@ public final class Decoder {
         
         Instruction decode();
     }
-    private final InstructionDecoder[] m_decoderTable;
-    private final InstructionDecoder[] m_decoderTable0f;
-    private InstructionDecoder[] m_decoderTableCurrent;
+    private final InstructionDecoder[] m_decoderTableDefault;
+    private final InstructionDecoder[] m_decoderTable0F;
+    private final InstructionDecoder[] m_decoderTableD8;
+    private final InstructionDecoder[] m_decoderTableD9;
+    private final InstructionDecoder[] m_decoderTableDA;
+    private final InstructionDecoder[] m_decoderTableDB;
+    private final InstructionDecoder[] m_decoderTableDC;
+    private final InstructionDecoder[] m_decoderTableDD;
+    private final InstructionDecoder[] m_decoderTableDE;
+    private final InstructionDecoder[] m_decoderTableDF;
     
     /* ----------------------------------------------------- *
      * MOD/RM / SIB byte decoding                            *
@@ -83,7 +92,7 @@ public final class Decoder {
     private int m_scale;
     private int m_base;
     private int m_index;
-    private boolean m_hasReadModRM;
+    private boolean m_hasDecodedModRM;
     
     /* ----------------------------------------------------- *
      * Decoded MOD/RM / SIB byte                             *
@@ -142,10 +151,10 @@ public final class Decoder {
     
     
     
-    public Decoder(Intel80386 cpu, MMU mmu) {
+    public Decoder(Intel80386 cpu) {
         
         m_cpu = cpu;
-        m_mmu = mmu;
+        m_mmu = cpu.getMMU();
         
         m_buffer = new ArrayList<>();
         PAGECROSS_EXCEPTION = new DecoderPageCrossException();
@@ -219,9 +228,36 @@ public final class Decoder {
         
         // <editor-fold defaultstate="collapsed" desc="Decoder table initialization">
         
+        // <editor-fold defaultstate="collapsed" desc="x87 Floating Point Unit (Unimplemented - TODO)">
+        
+        m_decoderTableD8 = new InstructionDecoder[256];
+        m_decoderTableD9 = new InstructionDecoder[256];
+        m_decoderTableDA = new InstructionDecoder[256];
+        m_decoderTableDB = new InstructionDecoder[256];
+        m_decoderTableDC = new InstructionDecoder[256];
+        m_decoderTableDD = new InstructionDecoder[256];
+        m_decoderTableDE = new InstructionDecoder[256];
+        m_decoderTableDF = new InstructionDecoder[256];
+        
+        InstructionDecoder invalidFPUInstr = () -> new ESCAPE(cpu);
+        
+        for(int op = 0; op < 0x100; op++) {
+            
+            m_decoderTableD8[op] = invalidFPUInstr;
+            m_decoderTableD9[op] = invalidFPUInstr;
+            m_decoderTableDA[op] = invalidFPUInstr;
+            m_decoderTableDB[op] = invalidFPUInstr;
+            m_decoderTableDC[op] = invalidFPUInstr;
+            m_decoderTableDD[op] = invalidFPUInstr;
+            m_decoderTableDE[op] = invalidFPUInstr;
+            m_decoderTableDF[op] = invalidFPUInstr;
+        }
+        
+        // </editor-fold>
+        
         // <editor-fold defaultstate="collapsed" desc="Extended table (0fh)">
         
-        m_decoderTable0f = new InstructionDecoder[] {
+        m_decoderTable0F = new InstructionDecoder[] {
             
             ( /* 0x0f 0x00: grp6 rm16 */ ) -> {
 
@@ -304,6 +340,14 @@ public final class Decoder {
                     case 6:
                         return finish(new LMSW(cpu, buildRM16()));
                         
+                    /* invlpg a16/32 (486+) */
+                    case 7:
+                        requiresCPUOfAtLeast(CPUType.i486);
+                        if(m_mod == 3)
+                            throw CPUException.getInvalidOpcode();
+                        
+                        return new INVLPG(cpu, buildADDR(0));
+                        
                     default:
                         throw CPUException.getInvalidOpcode();
                 }
@@ -345,14 +389,16 @@ public final class Decoder {
                 throw CPUException.getInvalidOpcode();
             },
 
-            ( /* 0x0f 0x08: Invalid */ ) -> {
+            ( /* 0x0f 0x08: invd (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                return new INVD(cpu);
             },
 
-            ( /* 0x0f 0x09: Invalid */ ) -> {
+            ( /* 0x0f 0x09: wbinvd (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                return new WBINVD(cpu);
             },
 
             ( /* 0x0f 0x0a: Invalid */ ) -> {
@@ -512,7 +558,7 @@ public final class Decoder {
                     
                     case 0: return finish(new MOVSpecial(cpu, buildCR0(), buildRM32()));
                     case 2: return new MOVSpecial(cpu, buildCR2(), buildRM32());
-                    case 3: return new MOVSpecial(cpu, buildCR3(), buildRM32());
+                    case 3: return finish(new MOVSpecial(cpu, buildCR3(), buildRM32()));
                     
                     default:
                         throw CPUException.getInvalidOpcode();
@@ -1018,97 +1064,97 @@ public final class Decoder {
             ( /* 0x0f 0x80: jo rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionOverflow()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionOverflow()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionOverflow()));
             },
 
             ( /* 0x0f 0x81: jno rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotOverflow()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotOverflow()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotOverflow()));
             },
 
             ( /* 0x0f 0x82: jb rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionBellow()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionBellow()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionBellow()));
             },
 
             ( /* 0x0f 0x83: jnb rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotBellow()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotBellow()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotBellow()));
             },
 
             ( /* 0x0f 0x84: jz rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionZero()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionZero()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionZero()));
             },
 
             ( /* 0x0f 0x85: jnz rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotZero()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotZero()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotZero()));
             },
 
             ( /* 0x0f 0x86: jbe rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionBellowOrEqual()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionBellowOrEqual()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionBellowOrEqual()));
             },
 
             ( /* 0x0f 0x87: jnbe rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotBellowOrEqual()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotBellowOrEqual()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotBellowOrEqual()));
             },
 
             ( /* 0x0f 0x88: js rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionSign()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionSign()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionSign()));
             },
 
             ( /* 0x0f 0x89: jns rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotSign()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotSign()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotSign()));
             },
 
             ( /* 0x0f 0x8a: jp rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionParity()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionParity()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionParity()));
             },
 
             ( /* 0x0f 0x8b: jnp rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotParity()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotParity()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotParity()));
             },
 
             ( /* 0x0f 0x8c: jl rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionLess()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionLess()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionLess()));
             },
 
             ( /* 0x0f 0x8d: jnl rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotLess()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotLess()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotLess()));
             },
 
             ( /* 0x0f 0x8e: jle rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionLessOrEqual()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionLessOrEqual()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionLessOrEqual()));
             },
 
             ( /* 0x0f 0x8f: jnle rel16/32 */ ) -> {
                 
                 return finish(isOperandSize32() ? new JMP_CONDITIONAL(cpu, buildIPRelativeIMM32(), buildConditionNotLessOrEqual()) :
-                                                           new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotLessOrEqual()));
+                                                  new JMP_CONDITIONAL(cpu, buildIPRelativeIMM16(), buildConditionNotLessOrEqual()));
             },
 
             ( /* 0x0f 0x90: seto rm8 */ ) -> {
@@ -1235,9 +1281,11 @@ public final class Decoder {
                                            new POP16(cpu, buildFS());
             },
 
-            ( /* 0x0f 0xa2: Invalid */ ) -> {
+            ( /* 0x0f 0xa2: cpuid (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new CPUID(cpu);
             },
 
             ( /* 0x0f 0xa3: bt rm16/32, r16/32 */ ) -> {
@@ -1344,14 +1392,23 @@ public final class Decoder {
                                            new IMUL16_2(cpu, buildREG16(), buildREG16(), buildRM16());
             },
 
-            ( /* 0x0f 0xb0: Invalid */ ) -> {
+            ( /* 0x0f 0xb0: cmpxchg rm8, r8 (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                decodeMODRM();
+                
+                return new CMPXCHG8(cpu, buildRM8(), buildREG8());
             },
 
-            ( /* 0x0f 0xb1: Invalid */ ) -> {
+            ( /* 0x0f 0xb1: cmpxchg rm16/32, r16/32 (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                decodeMODRM();
+                
+                return isOperandSize32() ? new CMPXCHG32(cpu, buildRM32(), buildREG32()) :
+                                           new CMPXCHG16(cpu, buildRM16(), buildREG16());
             },
 
             ( /* 0x0f 0xb2: lss r16/32, m16:16/32 */ ) -> {
@@ -1498,14 +1555,23 @@ public final class Decoder {
                 return new MOVSX16TO32(cpu, buildREG32(), buildRM16());
             },
 
-            ( /* 0x0f 0xc0: Invalid */ ) -> {
+            ( /* 0x0f 0xc0: xadd rm8, r8 (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                decodeMODRM();
+                
+                return new XADD8(cpu, buildRM8(), buildREG8());
             },
 
-            ( /* 0x0f 0xc1: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xc1: xadd rm16/32, r16/32 (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                decodeMODRM();
+                
+                return isOperandSize32() ? new XADD32(cpu, buildRM32(), buildREG32()) :
+                                           new XADD16(cpu, buildRM16(), buildREG16());
             },
 
             ( /* 0x0f 0xc2: Invalid */ ) -> {
@@ -1538,44 +1604,60 @@ public final class Decoder {
                 throw CPUException.getInvalidOpcode();
             },
 
-            ( /* 0x0f 0xc8: Invalid */ ) -> {
+            ( /* 0x0f 0xc8: bswap eax (486+) */ ) -> {
 
-                throw CPUException.getInvalidOpcode();
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildEAX());
             },
 
-            ( /* 0x0f 0xc9: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xc9: bswap ecx (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildECX());
             },
 
-            ( /* 0x0f 0xca: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xca: bswap edx (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildEDX());
             },
 
-            ( /* 0x0f 0xcb: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xcb: bswap ebx (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildEBX());
             },
 
-            ( /* 0x0f 0xcc: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xcc: bswap esp (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildESP());
             },
 
-            ( /* 0x0f 0xcd: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xcd: bswap ebp (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildEBP());
             },
 
-            ( /* 0x0f 0xce: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xce: bswap esi (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildESI());
             },
 
-            ( /* 0x0f 0xcf: Invalid */ ) -> {
-
-                throw CPUException.getInvalidOpcode();
+            ( /* 0x0f 0xcf: bswap edi (486+) */ ) -> {
+                
+                requiresCPUOfAtLeast(CPUType.i486);
+                
+                return new BSWAP(cpu, buildEDI());
             },
 
             ( /* 0x0f 0xd0: Invalid */ ) -> {
@@ -1822,7 +1904,7 @@ public final class Decoder {
         // </editor-fold>
         // <editor-fold defaultstate="collapsed" desc="Default table">
         
-        m_decoderTable = new InstructionDecoder[] {
+        m_decoderTableDefault = new InstructionDecoder[] {
         
             ( /* 0x00: add rm8, r8 */ ) -> {
                 
@@ -1926,9 +2008,7 @@ public final class Decoder {
 
             ( /* 0x0f: Extended opcode table */ ) -> {
 
-                m_decoderTableCurrent = m_decoderTable0f;
-                
-                return null;
+                return m_decoderTable0F[readIMM8()].decode();
             },
             
             ( /* 0x10: adc rm8, r8 */ ) -> {
@@ -3504,59 +3584,43 @@ public final class Decoder {
             },
 
             ( /* 0xd8: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableD8[decodeMODRM()].decode();
             },
 
             ( /* 0xd9: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableD9[decodeMODRM()].decode();
             },
 
             ( /* 0xda: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableDA[decodeMODRM()].decode();
             },
 
             ( /* 0xdb: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableDB[decodeMODRM()].decode();
             },
 
             ( /* 0xdc: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableDC[decodeMODRM()].decode();
             },
 
             ( /* 0xdd: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableDD[decodeMODRM()].decode();
             },
 
             ( /* 0xde: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+               return m_decoderTableDE[decodeMODRM()].decode();
             },
 
             ( /* 0xdf: escape */ ) -> {
-
-                decodeMODRM();
                 
-                return new ESCAPE(cpu);
+                return m_decoderTableDF[decodeMODRM()].decode();
             },
 
             ( /* 0xe0: loopnz rel8 */ ) -> {
@@ -3862,6 +3926,12 @@ public final class Decoder {
     
     // <editor-fold defaultstate="collapsed" desc="Some helper methods">
     
+    private void requiresCPUOfAtLeast(CPUType type) {
+        
+        if(type.ordinal() > m_cpu.getCPUType().ordinal())
+            throw CPUException.getInvalidOpcode();
+    }
+    
     private Instruction finish(Instruction instr) {
         
         m_decoderRunning = false;
@@ -3988,17 +4058,14 @@ public final class Decoder {
                 m_prefixLock = false;
                 m_prefixWait = false;
                 m_prefixSegmentOverride = null;
-                m_hasReadModRM = false;
-                m_decoderTableCurrent = m_decoderTable;
+                m_hasDecodedModRM = false;
                 
-                
-                // Decode instructions
+                // Decode one instruction
                 currentEIP = m_decoderOffset;
                 
                 Instruction instr = null;
                 while(instr == null)
-                    instr = m_decoderTableCurrent[readIMM8()].decode();
-                
+                    instr = m_decoderTableDefault[readIMM8()].decode();
                 
                 // Handle REP, WAIT and LOCK prefixes
                 if(m_prefixRepZ || m_prefixRepNZ) {
@@ -4081,14 +4148,14 @@ public final class Decoder {
     // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Decoding of the MOD R/M byte">
     
-    private void decodeMODRM() {
+    private int decodeMODRM() {
         
-        if(m_hasReadModRM)
+        if(m_hasDecodedModRM)
             throw new IllegalStateException("MOD/RM byte is already decoded");
         
-        m_hasReadModRM = true;
+        m_hasDecodedModRM = true;
         
-        // Read MOD/RM byte
+        // Decode MOD/RM byte
         int data = readIMM8();
         
         m_mod = (data >> 6) & 0x03;
@@ -4096,19 +4163,18 @@ public final class Decoder {
         m_rm = data & 0x07;
         
         if(m_mod == 3)
-            return;
+            return data;
         
-        // Decode MOD/RM byte
         if(isAddressSize32()) {
 
             if(m_rm == 4) {
 
-                data = readIMM8();
+                int sib = readIMM8();
 
-                m_scale = (data >> 6) & 0x03;
-                m_index = (data >> 3) & 0x07;
-                m_base = data & 0x07;
-                
+                m_scale = (sib >> 6) & 0x03;
+                m_index = (sib >> 3) & 0x07;
+                m_base = sib & 0x07;
+
                 if(m_base == 5 && m_mod == 0) {
 
                     m_addrSeg = getDefaultSegment();
@@ -4168,7 +4234,7 @@ public final class Decoder {
                 m_addrSeg = getDefaultSegment(m_addrSegs16[m_rm]);
                 m_addrBase = m_addrBaseRegs16[m_rm];
                 m_addrIdx = m_addrIndexRegs16[m_rm];
-                
+
                 switch(m_mod) {
 
                     case 0: m_addrDisp = 0; break;
@@ -4177,6 +4243,8 @@ public final class Decoder {
                 }
             }
         }
+        
+        return data;
     }
     
     // </editor-fold>
@@ -4512,7 +4580,7 @@ public final class Decoder {
     
     private Operand buildREG8() {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         return buildREG(8, m_reg);
@@ -4520,7 +4588,7 @@ public final class Decoder {
     
     private Operand buildREG16() {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         return buildREG(16, m_reg);
@@ -4528,7 +4596,7 @@ public final class Decoder {
     
     private Operand buildREG32() {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         return buildREG(32, m_reg);
@@ -4536,7 +4604,7 @@ public final class Decoder {
     
     private Operand buildRM8() {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         if(m_mod == 3)
@@ -4547,7 +4615,7 @@ public final class Decoder {
     
     private Operand buildRM16() {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         if(m_mod == 3)
@@ -4563,7 +4631,7 @@ public final class Decoder {
     
     private Operand buildRM32(boolean limitMemTo16) {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         if(m_mod == 3)
@@ -4646,7 +4714,7 @@ public final class Decoder {
     
     private Operand buildSEG(boolean isDestination) {
         
-        if(!m_hasReadModRM)
+        if(!m_hasDecodedModRM)
             throw new IllegalArgumentException("ModRM byte needs to be decoded first");
         
         if(isDestination && m_reg == SEGMENT_CS)

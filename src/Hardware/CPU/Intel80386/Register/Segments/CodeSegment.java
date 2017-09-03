@@ -62,6 +62,8 @@ public final class CodeSegment extends Segment {
         
         if(!isReadable())
             throw CPUException.getGeneralProtectionFault(0);
+        
+        // TODO: Check Alignment (486+)
     }
 
     @Override
@@ -80,6 +82,8 @@ public final class CodeSegment extends Segment {
             
             if(isOutsideLimit(offset, size))
                 throw CPUException.getGeneralProtectionFault(0);
+        
+            // TODO: Check Alignment (486+)
         }
     }
 }

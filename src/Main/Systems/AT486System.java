@@ -36,15 +36,15 @@ import Hardware.Video.VGA.TsengET4000.TsengET4000;
 
 
 
-public final class AT386System extends JPCSystem {
+public final class AT486System extends JPCSystem {
 
-    public static final String SYSTEM_NAME = "AT 386 System";
+    public static final String SYSTEM_NAME = "AT 486 System";
     
-    public AT386System(GraphicsCardListener gfxListener) {
+    public AT486System(GraphicsCardListener gfxListener) {
         
         super(SYSTEM_NAME, 32);
         
-        addComponent(new Intel80386(CPUType.i386, false, getIOMap(), getMemoryMap(), getScheduler()));
+        addComponent(new Intel80386(CPUType.i486, !true, getIOMap(), getMemoryMap(), getScheduler()));
         addComponent(new TsengET4000(gfxListener));
         addComponent(new PS2Controller());
         addComponent(new PS2Keyboard());
@@ -58,6 +58,6 @@ public final class AT386System extends JPCSystem {
         addComponent(new ATSystemRAM());
         addComponent(new BochsBios());
         addComponent(new Speaker());
-        addComponent(new CMOS("at386.nvr"));
+        addComponent(new CMOS("at486.nvr"));
     }
 }

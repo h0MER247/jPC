@@ -55,6 +55,16 @@ public final class Intel80386 implements HardwareComponent,
                                          CPU {
     
     /* ----------------------------------------------------- *
+     * Type of cpu that is currently emulated                *
+     * ----------------------------------------------------- */
+    public enum CPUType {
+        
+        i386, i486
+    }
+    private final CPUType m_cpuType;
+    private final boolean m_hasFPU;
+    
+    /* ----------------------------------------------------- *
      * Intel 80386 register set                              *
      * ----------------------------------------------------- */
     public final Reg32 EAX, EBX, ECX, EDX, ESP, EBP, ESI, EDI, EIP;
@@ -110,7 +120,10 @@ public final class Intel80386 implements HardwareComponent,
     
     
     
-    public Intel80386(IOMap ioMap, MemoryMap memoryMap, Scheduler scheduler) {
+    public Intel80386(CPUType cpuType, boolean hasFPU, IOMap ioMap, MemoryMap memoryMap, Scheduler scheduler) {
+        
+        m_cpuType = cpuType;
+        m_hasFPU = hasFPU;
         
         m_mmu = new MMU(this, memoryMap);
         m_ioMap = ioMap;
@@ -133,8 +146,8 @@ public final class Intel80386 implements HardwareComponent,
         CS = new CodeSegment("cs", this); DS = new DataSegment("ds", this);
         ES = new DataSegment("es", this); FS = new DataSegment("fs", this);
         GS = new DataSegment("gs", this); SS = new StackSegment("ss", this);
-        FLAGS = new Flags();
-        CR = new Control(m_mmu);
+        FLAGS = new Flags(this);
+        CR = new Control(this);
         
         GDT = new DescriptorTable("gdt");
         LDT = new DescriptorTable("ldt");
@@ -151,7 +164,7 @@ public final class Intel80386 implements HardwareComponent,
         TR7 = new RegTest(7);
         
         // Initialize decoder
-        m_decoder = new Decoder(this, m_mmu);
+        m_decoder = new Decoder(this);
         
         // Initialize descriptor cache
         m_descriptorCache = new Descriptor[4];
@@ -184,6 +197,9 @@ public final class Intel80386 implements HardwareComponent,
         DR0.reset(); DR1.reset(); DR2.reset();
         DR3.reset(); DR6.reset(); DR7.reset();
         TR6.reset(); TR7.reset();
+        
+        if(m_cpuType == CPUType.i486)
+            DX.setValue(0x045b);
         
         // Reset segments
         CS.reset(); DS.reset(); ES.reset(); FS.reset();
@@ -840,6 +856,21 @@ public final class Intel80386 implements HardwareComponent,
     
     // <editor-fold defaultstate="collapsed" desc="Some helper">
     
+    public CPUType getCPUType() {
+        
+        return m_cpuType;
+    }
+    
+    public boolean hasFPU() {
+        
+        return m_hasFPU;
+    }
+    
+    public MMU getMMU() {
+        
+        return m_mmu;
+    }
+    
     public int getCPL() {
         
         return CS.getDPL();
@@ -900,6 +931,8 @@ public final class Intel80386 implements HardwareComponent,
             EDI.getValue()
         );
         
+        String flags = "Flags:" + FLAGS.toString();
+        
         String segCS = dumpSegment(CS);
         String segDS = dumpSegment(DS);
         String segES = dumpSegment(ES);
@@ -945,7 +978,7 @@ public final class Intel80386 implements HardwareComponent,
         
         String block = m_currentBlock != null ? m_currentBlock.toString() : "No information";
         
-        return "CPU State:\n" + gpr + "\n" + segCS + "\n" + segDS + "\n" + segES +
+        return "CPU State:\n" + gpr + "\n" + flags + "\n" + segCS + "\n" + segDS + "\n" + segES +
                "\n" + segFS + "\n" + segGS + "\n" + segSS + "\n" + gdt + "\n" + idt +
                "\n" + ldt + "\n" + tr + "\n" + special + "\n\n" + "Dump of the current code block:\n" + block;
     }
