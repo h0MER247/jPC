@@ -1,8 +1,8 @@
 # jPC - A PC Emulator written in Java
 
 ### Features
- - Emulation of the Intel 8086 and 80386 CPU
- - Basic IDE and VGA emulation
+ - Emulation of the i8086 and i386 CPU (i486 is in development)
+ - Basic IDE and VGA emulation (no CD-ROM atm)
  - PC Speaker output
  - Serial and PS/2 Mouse emulation
  - ... and yes, it boots Windows 95 :)
@@ -54,7 +54,7 @@ The project requires the Tseng ET 4000 BIOS ROM (and optionally the IBM Basic) w
  - You'll find a [compiled] version of the project in the corresponding issues thread.
  
 ### Useful Tools
- - [WinImage], for manipulating hard disk images. You have to have this in order to create your own hard disk images and copy files from your pc into that image.
+ - [WinImage], for manipulating hard disk images. You have to have this in order to create your own hard disk images and to copy files from your pc into that image.
   
 Have fun.
 
