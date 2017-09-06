@@ -64,22 +64,16 @@ public final class LSL extends Instruction {
             throw CPUException.getInvalidOpcode();
         
         
-        int selector = m_selector.getValue() & 0xffff;
+        m_cpu.FLAGS.ZF = false;
         
-        if(m_cpu.isNullSelector(selector)) {
-
-            m_cpu.FLAGS.ZF = false;
-        }
-        else {
+        int selector = m_selector.getValue() & 0xffff;
+        if(!m_cpu.isNullSelector(selector)) {
             
             // Check descriptor type
             Descriptor desc;
-            if((desc = m_cpu.getDescriptor(selector)) == null) {
-
-                m_cpu.FLAGS.ZF = false;
+            if((desc = m_cpu.getDescriptor(selector)) == null)
                 return;
-            }
-
+            
             if(VALID_TYPES[desc.getType()]) {
                 
                 // Check privileges (exclude conforming code segments)
@@ -89,7 +83,6 @@ public final class LSL extends Instruction {
                     if(desc.getDPL() < m_cpu.getCPL() ||
                        desc.getDPL() < m_cpu.getSelectorsRPL(selector)) {
 
-                        m_cpu.FLAGS.ZF = false;
                         return;  
                     }
                 }
@@ -97,10 +90,6 @@ public final class LSL extends Instruction {
                 // Save limit
                 m_destination.setValue(desc.getLimit());
                 m_cpu.FLAGS.ZF = true;
-            }
-            else {
-                
-                m_cpu.FLAGS.ZF = false;
             }
         }
     }

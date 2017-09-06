@@ -63,13 +63,10 @@ public final class LAR extends Instruction {
             throw CPUException.getInvalidOpcode();
         
         
-        int selector = m_selector.getValue() & 0xffff;
+        m_cpu.FLAGS.ZF = false;
         
-        if(m_cpu.isNullSelector(selector)) {
-            
-            m_cpu.FLAGS.ZF = false;
-        }
-        else {
+        int selector = m_selector.getValue() & 0xffff;
+        if(!m_cpu.isNullSelector(selector)) {
         
             // Check descriptor type
             Descriptor desc;
@@ -84,18 +81,13 @@ public final class LAR extends Instruction {
                     // DPL must be >= CPL and RPL
                     if(desc.getDPL() < m_cpu.getCPL() ||
                        desc.getDPL() < m_cpu.getSelectorsRPL(selector)) {
-
-                        m_cpu.FLAGS.ZF = false;
+                        
                         return;
                     }
                 }
                 
                 m_cpu.FLAGS.ZF = true;
                 m_destination.setValue(desc.getHighWord() & (m_is32 ? 0x00ffff00 : 0xff00));
-            }
-            else {
-                
-                m_cpu.FLAGS.ZF = false;
             }
         }
     }
