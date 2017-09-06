@@ -377,14 +377,13 @@ public final class TaskRegister {
         
         // Now load all descriptor data
         loadLDT(ldt);
-        loadSS(ss);
         loadCS(cs);
+        loadSS(ss);
         loadDataSegment(m_cpu.DS, ds);
         loadDataSegment(m_cpu.ES, es);
         loadDataSegment(m_cpu.FS, fs);
         loadDataSegment(m_cpu.GS, gs);
     }
-    
     
     
     

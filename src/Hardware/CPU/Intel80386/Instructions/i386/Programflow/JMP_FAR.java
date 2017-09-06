@@ -22,6 +22,7 @@ import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
 import Hardware.CPU.Intel80386.Operands.Operand;
 import Hardware.CPU.Intel80386.Register.Segments.Descriptor;
+import Hardware.CPU.Intel80386.Register.TaskRegister.TaskRegister;
 
 
 
@@ -104,7 +105,7 @@ public final class JMP_FAR extends Instruction {
         else if(descCS.getTypeInfo().isTaskGate())
             JMP_FAR_TASK_GATE(cs, ip, descCS, CPL);
         else if(descCS.getTypeInfo().isTaskStateSegment())
-            JMP_FAR_TASK_STATE_SEGMENT(cs, ip, descCS, CPL);
+            JMP_FAR_TASK_STATE_SEGMENT(cs, descCS, CPL);
         else
             throw CPUException.getGeneralProtectionFault(cs & 0xfffc);
     }
@@ -145,9 +146,24 @@ public final class JMP_FAR extends Instruction {
         throw new UnsupportedOperationException("Implement me");
     }
     
-    private void JMP_FAR_TASK_STATE_SEGMENT(int cs, int ip, Descriptor descCS, int CPL) {
+    private void JMP_FAR_TASK_STATE_SEGMENT(int tssSelector, Descriptor descTSS, int CPL) {
         
-        throw new UnsupportedOperationException("Implement me");
+        // Descriptor DPL must be >= CPL, as well as RPL of the tss selector
+        if(descTSS.getDPL() < CPL ||
+           descTSS.getDPL() < m_cpu.getSelectorsRPL(tssSelector)) {
+            
+            throw CPUException.getGeneralProtectionFault(tssSelector & 0xfffc);
+        }
+        
+        // Task must be available
+        if(!descTSS.getTypeInfo().isAvailableTaskStateSegment())
+            throw CPUException.getGeneralProtectionFault(tssSelector & 0xfffc);
+        
+        // Segment must be present
+        if(!descTSS.isPresent())
+            throw CPUException.getSegmentNotPresent(tssSelector & 0xfffc);
+        
+        m_cpu.TR.switchToTask(tssSelector, descTSS, TaskRegister.TASKSWITCH_JMP);
     }
     
     @Override
