@@ -21,7 +21,7 @@ import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Intel80386;
 import Hardware.HardwareComponent;
 import MemoryMap.MemoryMap;
-import java.util.HashMap;
+import java.util.Arrays;
 
 
 
@@ -45,26 +45,6 @@ public final class MMU implements HardwareComponent {
     private final int PG_DIRTY = 0x40;
     
     /* ----------------------------------------------------- *
-     * TLB                                                   *
-     * ----------------------------------------------------- */
-    private final class TLBEntry {
-        
-        public boolean isReadOnly;
-        public boolean isSystemPage;
-        public int physicalAddr;
-        
-        public TLBEntry(int pageDirectoryEntry,
-                        int pageTableEntry) {
-            
-            isReadOnly = ((pageDirectoryEntry & pageTableEntry) & PG_RW) == 0;
-            isSystemPage = ((pageDirectoryEntry & pageTableEntry) & PG_US) == 0;
-            physicalAddr = pageTableEntry & 0xfffff000;
-        }
-    }
-    private final HashMap<Integer, TLBEntry> m_tlb;
-    private final Integer[] m_integerLUT;
-    
-    /* ----------------------------------------------------- *
      * Current MMU state                                     *
      * ----------------------------------------------------- */
     private int m_pdbr;
@@ -75,6 +55,11 @@ public final class MMU implements HardwareComponent {
      * A20 Gate                                              *
      * ----------------------------------------------------- */
     private int m_a20GateMask;
+    
+    /* ----------------------------------------------------- *
+     * TLB                                                   *
+     * ----------------------------------------------------- */
+    private final int[] m_tlb;
     
     /* ----------------------------------------------------- *
      * Reference to the cpu and memory map                   *
@@ -89,11 +74,7 @@ public final class MMU implements HardwareComponent {
         m_cpu = cpu;
         m_memoryMap = memoryMap;
         
-        m_tlb = new HashMap<>();
-        m_integerLUT = new Integer[1 << 20];
-        
-        for(int i = 0; i < m_integerLUT.length; i++)
-            m_integerLUT[i] = i;
+        m_tlb = new int[0x400];
     }
     
     
@@ -109,7 +90,7 @@ public final class MMU implements HardwareComponent {
         setPagingEnabled(false);
         setA20Gate(false);
         
-        flushTLB();
+        Arrays.fill(m_tlb, 0xffffffff);
     }
     
     // </editor-fold>
@@ -155,12 +136,8 @@ public final class MMU implements HardwareComponent {
     public void setPageDirectoryBaseRegister(int address) {
         
         m_pdbr = address & 0xfffff000;
-        flushTLB();
-    }
-    
-    public void flushTLB() {
         
-        m_tlb.clear();
+        Arrays.fill(m_tlb, 0xffffffff);
     }
     
     public void invalidatePage(int address) {
@@ -168,16 +145,22 @@ public final class MMU implements HardwareComponent {
         throw new UnsupportedOperationException("Implement me");
     }
     
+    
+    
+    
     public int getPhysicalAddress(int linearAddress, boolean isWrite, boolean isUserAccess) {
         
         if(m_isPagingEnabled) {
             
-            TLBEntry phys = m_tlb.get(m_integerLUT[linearAddress >>> 12]);
+            int tlbIdx = (linearAddress >>> 12) & 0x3ff;
+            int linearAddrHi = linearAddress >>> 22;
+            
+            int physicalAddress = m_tlb[tlbIdx];
             
             //
             // Walk the page tables if no entry in the tlb was found
             //
-            if(phys == null) {
+            if(physicalAddress == 0xffffffff || (((linearAddrHi ^ physicalAddress) & 0x3ff) != 0)) {
                 
                 // Read page directory
                 int pdEntryAddress = m_pdbr + ((linearAddress >>> 20) & 0xffc);
@@ -212,10 +195,13 @@ public final class MMU implements HardwareComponent {
                     m_memoryMap.writeMEM8(ptEntryAddress, ptEntry | PG_ACCESSED);
 
                 // Put entry in the tlb
-                m_tlb.put(m_integerLUT[linearAddress >>> 12], phys = new TLBEntry(pdEntry, ptEntry));
+                physicalAddress  = ptEntry & 0xfffff000;
+                physicalAddress |= linearAddrHi & 0x3ff;
+                physicalAddress |= ((ptEntry & pdEntry) & (PG_RW | PG_US)) << 9;
+                
+                m_tlb[tlbIdx] = physicalAddress;
             }
-
-
+            
             //
             // Check access rights if the cpu operates in user mode (cpl == 3).
             // Users don't have access to non user pages and can't write into
@@ -223,7 +209,10 @@ public final class MMU implements HardwareComponent {
             //
             if(m_cpu.getCPL() == 3 && isUserAccess) {
                 
-                if(phys.isSystemPage || (phys.isReadOnly && isWrite)) {
+                boolean isSystemPage = (physicalAddress & (PG_US << 9)) == 0;
+                boolean isReadOnly = (physicalAddress & (PG_RW << 9)) == 0;
+                
+                if(isSystemPage || (isReadOnly && isWrite)) {
 
                     setPageFaultLinearAddress(linearAddress);
                     throw CPUException.getPageProtectionViolation(isWrite, true);
@@ -231,7 +220,7 @@ public final class MMU implements HardwareComponent {
             }
             
             // Return the physical address
-            return (phys.physicalAddr | (linearAddress & 0xfff)) & m_a20GateMask;
+            return ((physicalAddress & 0xfffff000) | (linearAddress & 0xfff)) & m_a20GateMask;
         }
         else {
             
@@ -251,7 +240,7 @@ public final class MMU implements HardwareComponent {
     
     public int readMEM16(int address, boolean isUserAccess) {
         
-        if((address & 0x01) == 0) {
+        if(((address & 0x01) == 0) || (((address ^ (address + 1)) & ~0xfff) == 0)) {
         
             return m_memoryMap.readMEM16(getPhysicalAddress(address, READ_ACCESS, isUserAccess));
         }
@@ -264,7 +253,7 @@ public final class MMU implements HardwareComponent {
     
     public int readMEM32(int address, boolean isUserAccess) {
         
-        if((address & 0x03) == 0) {
+        if(((address & 0x03) == 0) || (((address ^ (address + 3)) & ~0xfff) == 0)) {
             
             return m_memoryMap.readMEM32(getPhysicalAddress(address, READ_ACCESS, isUserAccess));
         }
@@ -287,7 +276,7 @@ public final class MMU implements HardwareComponent {
     
     public void writeMEM16(int address, int data, boolean isUserAccess) {
         
-        if((address & 0x01) == 0) {
+        if(((address & 0x01) == 0) || (((address ^ (address + 1)) & ~0xfff) == 0)) {
             
             address = getPhysicalAddress(address, WRITE_ACCESS, isUserAccess);
             
@@ -303,7 +292,7 @@ public final class MMU implements HardwareComponent {
     
     public void writeMEM32(int address, int data, boolean isUserAccess) {
         
-        if((address & 0x03) == 0) {
+        if(((address & 0x03) == 0) || (((address ^ (address + 3)) & ~0xfff) == 0)) {
             
             address = getPhysicalAddress(address, WRITE_ACCESS, isUserAccess);
             
