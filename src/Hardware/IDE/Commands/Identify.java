@@ -35,9 +35,6 @@ public final class Identify extends ATACommand {
     @Override
     public boolean onFirstExecute() {
         
-        if(m_currDrive.getRegister().isDisconnected)
-            return abort();
-        
         return proceed();
     }
     

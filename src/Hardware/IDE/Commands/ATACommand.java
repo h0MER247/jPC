@@ -47,7 +47,10 @@ public abstract class ATACommand {
         m_currDrive = m_ide.getCurrentDrive();
         m_otherDrive = m_ide.getOtherDrive();
         
-        return onFirstExecute();
+        if(m_currDrive.isDisconnected())
+            return abort();
+        else
+            return onFirstExecute();
     }
     
     
