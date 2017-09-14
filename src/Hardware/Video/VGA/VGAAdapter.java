@@ -108,6 +108,7 @@ public abstract class VGAAdapter extends GraphicsCard
      * ----------------------------------------------------- */
     private final LinkedList<VGARenderer> m_renderer;
     private VGARenderer m_currentRenderer;
+    private final VGARenderer m_blankRenderer;
     private int m_vramAddr;
     protected int m_pixelShift;
     
@@ -147,7 +148,7 @@ public abstract class VGAAdapter extends GraphicsCard
         
         // Initialize renderer
         m_renderer = new LinkedList<>();
-        m_renderer.add(new VGABlankRenderer());
+        m_renderer.add(m_blankRenderer = new VGABlankRenderer());
         m_renderer.add(new VGATextRendererLo());
         m_renderer.add(new VGATextRendererHi());
         m_renderer.add(new VGAGraphicRenderer2bppLo());
@@ -1097,7 +1098,7 @@ public abstract class VGAAdapter extends GraphicsCard
     protected final void updateRenderer() {
 
         // Set the current renderer to the blank renderer
-        m_currentRenderer = m_renderer.get(0);
+        m_currentRenderer = m_blankRenderer;
         
         // Try to find a renderer that can draw a line in the current operating mode
         for(VGARenderer renderer : m_renderer) {
@@ -1230,7 +1231,7 @@ public abstract class VGAAdapter extends GraphicsCard
                 
                 int chr = m_vram.getData(addr << 1);
                 int att = m_vram.getData((addr << 1) + 1);
-                int fntAddr = (((att & 0x08) != 0) ? fontAddressA : fontAddressB)  + (chr << 7) + fontRowOffset;
+                int fntAddr = (((att & 0x08) != 0) ? fontAddressA : fontAddressB) + (chr << 7) + fontRowOffset;
                 int fnt = m_vram.getData(fntAddr + 2);
                 
                 
