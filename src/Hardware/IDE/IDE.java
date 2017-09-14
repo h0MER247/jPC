@@ -13,8 +13,7 @@ import Main.Systems.ComponentConfig.Type;
 
 
 /**
- * Known issues: - No DMA transfers atm
- *               - Only a few commands implemented
+ * Known issues: - Only a few commands implemented
  *               - Public variables in ATARegister.java
  */
 public final class IDE implements HardwareComponent,
@@ -418,10 +417,15 @@ public final class IDE implements HardwareComponent,
         if(((m_currentDrive.getRegister().control ^ data) & ATA_CTRL_SRST) != 0) {
             
             m_currentDrive.getRegister().status = ATA_SR_BSY;
+            m_otherDrive.getRegister().status = ATA_SR_BSY;
+            
             if((data & ATA_CTRL_SRST) == 0) {
                 
+                m_otherDrive.getRegister().reset();
                 m_currentDrive.getRegister().reset();
-                updateDrive(m_currentDrive.getRegister().driveAndHead); // TODO: Find a better way
+                
+                 // TODO: Find a better way
+                updateDrive(m_currentDrive.getRegister().driveAndHead);
             }
         }
         
