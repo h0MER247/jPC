@@ -41,6 +41,7 @@ public final class IDE implements HardwareComponent,
     private final ATACommand m_cmdSetFeatures;
     private final ATACommand m_cmdSeek;
     private final ATACommand m_cmdPIdentify;
+    private final ATACommand m_cmdStandbyImmediate;
     private ATACommand m_currentCommand;
     
     /* ----------------------------------------------------- *
@@ -69,6 +70,7 @@ public final class IDE implements HardwareComponent,
         m_cmdSetFeatures = new SetFeatures(this);
         m_cmdSeek = new Seek(this);
         m_cmdPIdentify = new AtapiIdentify(this);
+        m_cmdStandbyImmediate = new StandbyImmediate(this);
         
         m_portMapping = isPrimaryAdapter ? new int[] { 0x1f0, 0x1f1, 0x1f2, 0x1f3, 0x1f4, 0x1f5, 0x1f6, 0x1f7, 0x3f6 } :
                                            new int[] { 0x170, 0x171, 0x172, 0x173, 0x174, 0x175, 0x176, 0x177, 0x376 };
@@ -442,6 +444,7 @@ public final class IDE implements HardwareComponent,
             case ATA_CMD_SET_FEATURES: m_currentCommand = m_cmdSetFeatures; break;
             case ATA_CMD_SEEK: m_currentCommand = m_cmdSeek; break;
             case ATA_CMD_ATAPI_IDENTIFY: m_currentCommand = m_cmdPIdentify; break;
+            case ATA_CMD_STANDBY_IMMEDIATE: m_currentCommand = m_cmdStandbyImmediate; break;
             
             default:
                 throw new IllegalArgumentException(String.format("Unknown IDE Command: %02X", data));

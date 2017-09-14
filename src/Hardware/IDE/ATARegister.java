@@ -48,6 +48,7 @@ public final class ATARegister {
     public static final int ATA_CMD_DRIVE_DIAGNOSTIC = 0x90;
     public static final int ATA_CMD_INIT_DRIVE_PARAMS = 0x91;
     public static final int ATA_CMD_ATAPI_IDENTIFY = 0xa1;
+    public static final int ATA_CMD_STANDBY_IMMEDIATE = 0xe0;
     public static final int ATA_CMD_IDENTIFY = 0xec;
     public static final int ATA_CMD_SET_FEATURES = 0xef;
     public int command;
