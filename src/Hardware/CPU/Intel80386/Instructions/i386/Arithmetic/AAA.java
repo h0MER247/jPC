@@ -47,6 +47,8 @@ public final class AAA extends Instruction {
             m_cpu.FLAGS.AF = true;
         }
         else {
+            
+            m_cpu.AL.setValue(al & 0x0f);
 
             m_cpu.FLAGS.CF = false;
             m_cpu.FLAGS.AF = false;
