@@ -22,6 +22,7 @@ import Hardware.HardwareComponent;
 import Hardware.Video.VGA.VGAAdapter;
 import java.util.ArrayList;
 import Hardware.Video.GraphicsCardListener;
+import Hardware.Video.VGA.VGARenderer;
 import IOMap.IOMap;
 
 
@@ -50,6 +51,8 @@ public final class TsengET4000 extends VGAAdapter {
     public TsengET4000(GraphicsCardListener listener) {
         
         super(listener, 1 * 1024 * 1024);
+        
+        addRenderer(new TsengET4000Renderer15bpp());
     }
     
     
@@ -164,8 +167,8 @@ public final class TsengET4000 extends VGAAdapter {
     @Override
     protected int getCRTCHorizontalDisplayEnd() {
         
-        if((m_atc[0x16] & 0x20) != 0)
-            return super.getCRTCHorizontalDisplayEnd() << 1;
+        if((m_atc[0x16] & 0x30) == 0x30)
+            return super.getCRTCHorizontalDisplayEnd() >>> 1;
         else
             return super.getCRTCHorizontalDisplayEnd();
     }
@@ -254,6 +257,78 @@ public final class TsengET4000 extends VGAAdapter {
                 return 36000000.0f;
         }
     }
+    
+    // </editor-fold>
+    
+    
+    
+    
+    // <editor-fold defaultstate="collapsed" desc="HiColor DAC">
+    
+    private int getHiColorDACMode() {
+        
+        return (m_dacControl & 0xe0) >> 4 | (m_dacControl & 0x01);
+    }
+    
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="Custom renderers">
+    
+    // <editor-fold defaultstate="collapsed" desc="Graphic 15bpp renderer">
+    
+    private final class TsengET4000Renderer15bpp implements VGARenderer {
+
+        private final int[] m_colorLUT;
+        
+        public TsengET4000Renderer15bpp() {
+            
+            m_colorLUT = new int[0x10000];
+            
+            for(int i = 0; i < 0x10000; i++) {
+                
+                int r = (i >>> 10) & 0x1f;
+                int g = (i >>> 5) & 0x1f;
+                int b = i & 0x1f;
+                
+                r = (r * 255) / 31;
+                g = (g * 255) / 31;
+                b = (b * 255) / 31;
+                
+                m_colorLUT[i] = 0xff000000 | (r << 16) | (g << 8) | b;
+            }
+        }
+        
+        @Override
+        public boolean isSuitableRenderer() {
+            
+            return isScreenVisible() &&
+                   getGDCGraphicModeEnable() &&
+                   getGDC256ColorModeEnable() &&
+                   !getATCPELClockDividedByTwo() &&
+                   ((getHiColorDACMode() & 0x0c) == 0x08);
+        }
+        
+        @Override
+        public void drawLine(int offset) {
+            
+            int addr = m_vramAddr;
+            int p1, p2;
+            
+            for(int x = 0; x < m_frameWidth; x += 2, addr += 4, offset += 2) {
+                
+                p1 = m_vram.getData(addr) |
+                    (m_vram.getData(addr + 1) << 8);
+                
+                p2 = m_vram.getData(addr + 2) |
+                    (m_vram.getData(addr + 3) << 8);
+                
+                m_frameData[offset] = m_colorLUT[p1];
+                m_frameData[offset + 1] = m_colorLUT[p2];
+            }
+        }
+    }
+    
+    // </editor-fold>
     
     // </editor-fold>
 }

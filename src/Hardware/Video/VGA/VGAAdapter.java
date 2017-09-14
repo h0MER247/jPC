@@ -109,7 +109,7 @@ public abstract class VGAAdapter extends GraphicsCard
     private final LinkedList<VGARenderer> m_renderer;
     private VGARenderer m_currentRenderer;
     private final VGARenderer m_blankRenderer;
-    private int m_vramAddr;
+    protected int m_vramAddr;
     protected int m_pixelShift;
     
     /* ----------------------------------------------------- *
