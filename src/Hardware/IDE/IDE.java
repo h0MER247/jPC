@@ -406,6 +406,7 @@ public final class IDE implements HardwareComponent,
         m_currentDrive = m_drives[driveSelect];
         m_otherDrive = m_drives[driveSelect ^ 0x01];
         
+        m_otherDrive.setLBAEnable(isLBAEnabled);
         m_currentDrive.setLBAEnable(isLBAEnabled);
         m_currentDrive.updateIRQ();
     }
