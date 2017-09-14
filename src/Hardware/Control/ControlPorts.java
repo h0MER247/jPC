@@ -117,7 +117,8 @@ public final class ControlPorts implements HardwareComponent,
                 m_pit.setCounterGate(2, (data & 0x01) != 0);
                 
                 // Speaker data
-                m_speaker.setData((data & 0x02) != 0);
+                if(m_speaker != null)
+                    m_speaker.setData((data & 0x02) != 0);
                 break;
                 
             case 0x92:
