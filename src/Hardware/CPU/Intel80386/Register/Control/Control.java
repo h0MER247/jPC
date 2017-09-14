@@ -32,12 +32,21 @@ public final class Control {
     private static final int CR0_EMULATION = 1 << 2;
     private static final int CR0_TASK_SWITCHED = 1 << 3;
     private static final int CR0_EXTENSION_TYPE = 1 << 4;
-    public static final int CR0_PAGING_ENABLED = 1 << 31;
+    private static final int CR0_NUMERIC_ERROR = 1 << 5;
+    private static final int CR0_WRITE_PROTECT = 1 << 16;
+    private static final int CR0_ALIGNMENT_MASK = 1 << 18;
+    private static final int CR0_NOT_WRITE_THROUGH = 1 << 29;
+    private static final int CR0_CACHE_DISABLE = 1 << 30;
+    private static final int CR0_PAGING_ENABLED = 1 << 31;
+    private static final int CR0_MASK_386 = 0x8000001f;
+    private static final int CR0_MASK_486 = 0xe005003f;
     
     /* ----------------------------------------------------- *
      * Controlregister 0                                     *
      * ----------------------------------------------------- */
     private int m_cr0;
+    private final int m_cr0ValidBitMask;
+    private final int m_cr0AlwaysOneMask;
     
     /* ----------------------------------------------------- *
      * Reference to the cpu and memory management unit       *
@@ -51,13 +60,29 @@ public final class Control {
         
         m_cpu = cpu;
         m_mmu = cpu.getMMU();
+        
+        switch(cpu.getCPUType()) {
+            
+            case i386:
+                m_cr0ValidBitMask = CR0_MASK_386;
+                m_cr0AlwaysOneMask = 0;
+                break;
+                
+            case i486:
+                m_cr0ValidBitMask = CR0_MASK_486;
+                m_cr0AlwaysOneMask = CR0_EXTENSION_TYPE;
+                break;
+            
+            default:
+                throw new IllegalArgumentException("Invalid cpu type specified");
+        }
     }
     
     
     
     public void reset() {
         
-        setCR0(m_cpu.hasFPU() ? CR0_MATH_PRESENT | CR0_EXTENSION_TYPE : 0);
+        setCR0(m_cpu.hasFPU() ? CR0_MATH_PRESENT : 0);
         setCR2(0);
         setCR3(0);
     }
@@ -82,7 +107,10 @@ public final class Control {
         
     public void setCR0(int val) {
         
-        m_cr0 = val | 0x7ffffff0;
+        val &= m_cr0ValidBitMask;
+        val |= m_cr0AlwaysOneMask;
+        
+        m_cr0 = val;
         m_mmu.setPagingEnabled((m_cr0 & CR0_PAGING_ENABLED) != 0);
     }
     
@@ -136,6 +164,21 @@ public final class Control {
     public boolean isPagingEnabled() {
         
         return (m_cr0 & CR0_PAGING_ENABLED) != 0;
+    }
+    
+    public boolean isNumericErrorEnabled() {
+        
+        return (m_cr0 & CR0_NUMERIC_ERROR) != 0;
+    }
+    
+    public boolean isWriteProtectEnabled() {
+        
+        return (m_cr0 & CR0_WRITE_PROTECT) != 0;
+    }
+    
+    public boolean isAlignmentCheckUnmasked() {
+        
+        return (m_cr0 & CR0_ALIGNMENT_MASK) != 0;
     }
     
     public void setTaskSwitched(boolean isTaskSwitched) {

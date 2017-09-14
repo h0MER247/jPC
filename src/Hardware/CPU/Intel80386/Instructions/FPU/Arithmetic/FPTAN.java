@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 h0MER247
+ * Copyright (C) 2017 homer
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,34 +15,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package Hardware.CPU.Intel80386.Instructions.i386.Misc;
+package Hardware.CPU.Intel80386.Instructions.FPU.Arithmetic;
 
-import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
 
 
 
-public final class ESCAPE extends Instruction {
-
-    public ESCAPE(Intel80386 cpu) {
+public final class FPTAN extends Instruction {
+    
+    public FPTAN(Intel80386 cpu) {
         
         super(cpu);
     }
-    
+
     @Override
     public void run() {
         
-        if(m_cpu.CR.isEmulationEnabled())
-            throw CPUException.getCoprocessorNotAvailable();
-        
-        if(m_cpu.CR.isMathPresent() && m_cpu.CR.isTaskSwitched())
-            throw CPUException.getCoprocessorNotAvailable();
+        m_cpu.FPU.setST0(
+                
+            Math.tan(m_cpu.FPU.getST0())
+        );
+        m_cpu.FPU.pushStack(1.0);
     }
     
     @Override
     public String toString() {
         
-        return "escape";
+        return "fptan";
     }
 }

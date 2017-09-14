@@ -45,7 +45,7 @@ public final class AT486System extends JPCSystem {
         
         super(SYSTEM_NAME, 32);
         
-        addComponent(new Intel80386(CPUType.i486, !true, getIOMap(), getMemoryMap(), getScheduler()));
+        addComponent(new Intel80386(CPUType.i486, true, getIOMap(), getMemoryMap(), getScheduler()));
         addComponent(new TsengET4000(gfxListener));
         addComponent(new PS2Controller());
         addComponent(new PS2Keyboard());

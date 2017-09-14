@@ -149,7 +149,7 @@ public abstract class JPCSystem {
                     }
                     
                     // Let the cpu run a few code blocks
-                    m_cpu.run(32768);
+                    m_cpu.run(8192);
                     
                     // Don't waste cpu while being paused
                     while(m_flagPause) {

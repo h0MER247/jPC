@@ -24,6 +24,7 @@ import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.MMU.MMU;
 import Hardware.CPU.Intel80386.Register.Control.Control;
 import Hardware.CPU.Intel80386.Register.Debug.RegDebug;
+import Hardware.CPU.Intel80386.Register.FPU.FPURegisters;
 import Hardware.CPU.Intel80386.Register.Flags.Flags;
 import Hardware.CPU.Intel80386.Register.General.Reg16;
 import Hardware.CPU.Intel80386.Register.General.Reg32;
@@ -79,6 +80,7 @@ public final class Intel80386 implements HardwareComponent,
     public final TaskRegister TR;
     public final RegDebug DR0, DR1, DR2, DR3, DR6, DR7;
     public final RegTest TR6, TR7;
+    public final FPURegisters FPU;
     public boolean HALTED;
     
     /* ----------------------------------------------------- *
@@ -148,6 +150,8 @@ public final class Intel80386 implements HardwareComponent,
         GS = new DataSegment("gs", this); SS = new StackSegment("ss", this);
         FLAGS = new Flags(this);
         CR = new Control(this);
+        
+        FPU = new FPURegisters(this);
         
         GDT = new DescriptorTable("gdt");
         LDT = new DescriptorTable("ldt");
