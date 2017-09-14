@@ -212,6 +212,19 @@ public final class TsengET4000 extends VGAAdapter {
     }
     
     // </editor-fold>
+    // <editor-fold defaultstate="collapsed" desc="Attribute Controller">
+    
+    @Override
+    protected void updateATC(int regIndex, int changedData) {
+        
+        // ATC: High-color 16-bit select
+        if(regIndex == 0x16 & ((changedData & 0x30) != 0))
+            updateTimings();
+        
+        super.updateATC(regIndex, changedData);
+    }
+    
+    // </editor-fold>
     
     // </editor-fold>
     
