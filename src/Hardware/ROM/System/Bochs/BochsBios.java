@@ -27,8 +27,8 @@ public final class BochsBios extends ROM {
         
         super(
                 
-            "bochs386.bin",                     // Image
-            "A3A971782F83EABD770A629E1D147D30", // MD5 Checksum
+            "BIOS-bochs-legacy",                // Image
+            "FD359AC2EE5E1023D414924E4EA59DB2", // MD5 Checksum
             0xf0000,                            // Start address
             0x10000,                            // Length of the rom in bytes
             false                               // The system bios rom isn't optional
