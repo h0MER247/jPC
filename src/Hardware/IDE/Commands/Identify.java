@@ -57,6 +57,7 @@ public final class Identify extends ATACommand {
         pio.setLPadStr16(46, 8, "v0.1", ASCII);
         pio.setLPadStr16(54, 40, String.format("jPC HDD - [%s]", m_currDrive.getFileName()), ASCII);
         pio.setInt16(96, 1); // DWord PIO transfer supported
+        pio.setInt16(98, 1 << 9); // LBA supported
         pio.setInt16(108, m_currDrive.getCylinders());
         pio.setInt16(110, m_currDrive.getHeads());
         pio.setInt16(112, m_currDrive.getSectors());
