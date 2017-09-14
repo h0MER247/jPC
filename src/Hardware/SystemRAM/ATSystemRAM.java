@@ -17,6 +17,7 @@
  */
 package Hardware.SystemRAM;
 
+import Hardware.CMOS.CMOSMap;
 import Hardware.HardwareComponent;
 import MemoryMap.MemoryReadable;
 import MemoryMap.MemoryWritable;
@@ -60,6 +61,12 @@ public final class ATSystemRAM implements HardwareComponent,
     public void reset() {
         
         Arrays.fill(m_data, 0x00);
+    }
+
+    @Override
+    public void updateCMOS(CMOSMap map) {
+        
+        map.setMemorySizeInMB(RAM_SIZE_IN_MB);
     }
     
     // </editor-fold>

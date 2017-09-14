@@ -1,5 +1,6 @@
 package Hardware.IDE;
 
+import Hardware.CMOS.CMOSMap;
 import Hardware.HardwareComponent;
 import static Hardware.IDE.ATARegister.*;
 import Hardware.IDE.Commands.*;
@@ -116,6 +117,32 @@ public final class IDE implements HardwareComponent,
         builder.value("Slave", "", Type.FileValue, value -> mountImage(1, value))
                .isResettingSystem()
                .build();
+    }
+    
+    @Override
+    public void updateCMOS(CMOSMap map) {
+        
+        if(!isPrimaryAdapter())
+            return;
+        
+        for(int i = 0; i < 2; i++) {
+
+            if(m_drives[i].isDisconnected()) {
+
+                map.setDriveGeometry(i, 0, 0, 0, 0);
+            }
+            else {
+
+                map.setDriveGeometry(
+
+                    i,
+                    47,
+                    m_drives[i].getCylindersDefault(),
+                    m_drives[i].getHeadsDefault(),
+                    m_drives[i].getSectorsDefault()
+                );
+            }
+        }
     }
     
     // </editor-fold>

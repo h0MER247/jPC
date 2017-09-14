@@ -17,6 +17,7 @@
  */
 package Main.Systems;
 
+import Hardware.CMOS.BochsCMOSMap;
 import Hardware.CMOS.CMOS;
 import Hardware.CPU.Intel80386.Intel80386;
 import Hardware.CPU.Intel80386.Intel80386.CPUType;
@@ -58,6 +59,6 @@ public final class AT386System extends JPCSystem {
         addComponent(new ATSystemRAM());
         addComponent(new BochsBios());
         addComponent(new Speaker());
-        addComponent(new CMOS("at386.nvr"));
+        addComponent(new CMOS("at386.nvr", new BochsCMOSMap()));
     }
 }

@@ -105,30 +105,34 @@ public final class CMOS implements HardwareComponent,
     private int m_updateINTCycles;
     
     /* ----------------------------------------------------- *
+     * CMOS non volatile ram                                 *
+     * ----------------------------------------------------- */
+    private static final String CMOS_PATH = "data/cmos";
+    private final File m_nvRamFile;
+    private final int[] m_nvRam;
+    private final CMOSMap m_map;
+    private int m_address;
+    
+    /* ----------------------------------------------------- *
      * Reference to the interrupt controller                 *
      * ----------------------------------------------------- */
     private PICs m_pics;
     private boolean m_isUpdateEnabled;
     private boolean m_isPeriodicUpdateEnabled;
     
-    /* ----------------------------------------------------- *
-     * CMOS non volatile ram                                 *
-     * ----------------------------------------------------- */
-    private static final String CMOS_PATH = "data/cmos";
-    private final File m_ramFile;
-    private final int[] m_ram;
-    private int m_address;
     
     
-    
-    public CMOS(String ramFileName) {
+    public CMOS(String ramFileName, CMOSMap map) {
         
-        m_ramFile = new File(CMOS_PATH, ramFileName);
-        m_ram = new int[0x80];
+        m_nvRamFile = new File(CMOS_PATH, ramFileName);
+        m_nvRam = new int[0x80];
+        
+        m_map = map;
+        m_map.setNVRAM(m_nvRam);
         
         m_calendar = new GregorianCalendar();
     }
-
+    
     
     
     // <editor-fold defaultstate="collapsed" desc="Interface implementation of HardwareComponent">
@@ -138,12 +142,13 @@ public final class CMOS implements HardwareComponent,
         
         try {
         
-            FileResource.read(m_ram, m_ramFile);
+            FileResource.read(m_nvRam, m_nvRamFile);
         }
         catch(IOException ex) {
             
-            Arrays.fill(m_ram, 0x00);
-            ex.printStackTrace(System.err);
+            Arrays.fill(m_nvRam, 0x00);
+            
+            m_map.initDefaults();
         }
     }
     
@@ -151,9 +156,9 @@ public final class CMOS implements HardwareComponent,
     public void reset() {
         
         m_address = 0x0d;
-        
-        // Clear shutdown status as this only confuses the bochs bios
-        m_ram[0x0f] = 0x00;
+            
+        // Clear shutdown status
+        m_nvRam[0x0f] = 0x00;
         
         // Update calendar time
         m_calendarTime = m_calendar.getTimeInMillis();
@@ -181,13 +186,13 @@ public final class CMOS implements HardwareComponent,
         if(component instanceof PICs)
             m_pics = (PICs)component;
     }
-    
+        
     @Override
     public void shutdown() {
         
         try {
             
-            FileResource.write(m_ram, m_ramFile);
+            FileResource.write(m_nvRam, m_nvRamFile);
         }
         catch(IOException ex) {
             
@@ -219,7 +224,7 @@ public final class CMOS implements HardwareComponent,
                 if((m_address & 0x7f) <= 0x0d)
                     data = readRTC();
                 else
-                    data = m_ram[m_address & 0x7f];
+                    data = m_nvRam[m_address & 0x7f];
                 m_address = 0x0d;
                 return data;
                 
@@ -250,7 +255,7 @@ public final class CMOS implements HardwareComponent,
                 if(m_address <= 0x0d)
                     writeRTC(data);
                 else
-                    m_ram[m_address] = data;
+                    m_nvRam[m_address] = data;
                 m_address = 0x0d;
                 break;
                 
@@ -338,7 +343,7 @@ public final class CMOS implements HardwareComponent,
             case 0x06: if(data >= 1 && data <= 7) m_calendar.set(Calendar.DAY_OF_WEEK, data - 1); break;
             case 0x07: if(data >= 1 && data <= 31) m_calendar.set(Calendar.DAY_OF_MONTH, data); break;
             case 0x08: if(data >= 1 && data <= 12) m_calendar.set(Calendar.MONTH, data - 1); break;
-            case 0x09: if(data >= 0 && data <= 99) m_calendar.set(Calendar.YEAR, (m_ram[0x32] * 100) + (data % 100)); break;
+            case 0x09: if(data >= 0 && data <= 99) m_calendar.set(Calendar.YEAR, (m_nvRam[0x32] * 100) + (data % 100)); break;
             
             // RTC status register A
             case 0x0a:
@@ -425,6 +430,15 @@ public final class CMOS implements HardwareComponent,
         m_pics.clearInterrupt(8);
     }
     
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="CMOS initialization">
+    
+    public CMOSMap getCMOSMap() {
+        
+        return m_map;
+    }
+
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Some helper methods">

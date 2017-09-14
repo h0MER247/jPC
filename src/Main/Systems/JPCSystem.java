@@ -17,6 +17,7 @@
  */
 package Main.Systems;
 
+import Hardware.CMOS.CMOS;
 import Hardware.CPU.CPU;
 import Hardware.HardwareComponent;
 import Hardware.IDE.IDE;
@@ -73,6 +74,7 @@ public abstract class JPCSystem {
     private IDE m_primaryIDE;
     private IDE m_secondaryIDE;
     private CPU m_cpu;
+    private CMOS m_cmos;
     
     /* ----------------------------------------------------- *
      * The thread in which the emulation runs                *
@@ -137,13 +139,17 @@ public abstract class JPCSystem {
                         m_ioMap.reset();
                         m_memMap.reset();
                         m_components.forEach(c -> c.reset());
+                        if(m_cmos != null) {
+                            
+                            m_components.forEach(c -> c.updateCMOS(m_cmos.getCMOSMap()));
+                        }
                         m_scheduler.reset();
                         
                         m_flagReset = false;
                     }
                     
                     // Let the cpu run a few code blocks
-                    m_cpu.run(8192);
+                    m_cpu.run(32768);
                     
                     // Don't waste cpu while being paused
                     while(m_flagPause) {
@@ -326,6 +332,9 @@ public abstract class JPCSystem {
             if(component instanceof CPU)
                 m_cpu = (CPU)component;
             
+            if(component instanceof CMOS)
+                m_cmos = (CMOS)component;
+            
             
             if(component instanceof IOMapped)
                 m_ioMap.addDevice((IOMapped)component);
@@ -367,7 +376,7 @@ public abstract class JPCSystem {
         configList.add(config);
     }
     
-    public void configure() {
+    public final void configure() {
         
         m_config.values()
                 .forEach(configList -> {
@@ -376,7 +385,7 @@ public abstract class JPCSystem {
         });
     }
     
-    public void forEachConfiguration(BiConsumer<String, ArrayList<ComponentConfig>> consumer) {
+    public final void forEachConfiguration(BiConsumer<String, ArrayList<ComponentConfig>> consumer) {
         
         m_config.forEach((category, componentList) -> {
             

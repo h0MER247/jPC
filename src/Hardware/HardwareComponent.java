@@ -17,6 +17,7 @@
  */
 package Hardware;
 
+import Hardware.CMOS.CMOSMap;
 import Main.Systems.ComponentConfig;
 import java.util.ArrayList;
 
@@ -29,7 +30,8 @@ public interface HardwareComponent {
     default void shutdown() {}
     default void wireWith(HardwareComponent component) {}
     default String getConfigCategory() { return ""; }
-    default void provideConfigValues(ComponentConfig.Builder builder) { }
+    default void provideConfigValues(ComponentConfig.Builder builder) {}
+    default void updateCMOS(CMOSMap map) {}
     
     default ArrayList<HardwareComponent> getSubComponents() {
         
