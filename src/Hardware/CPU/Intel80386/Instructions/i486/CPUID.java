@@ -32,29 +32,28 @@ public final class CPUID extends Instruction {
     @Override
     public void run() {
         
-        System.out.println("CPUID");
-        
         // TODO: I have to rethink this approach if I'll ever support
         //       other cpu types. But it's okay for testing.
         switch(m_cpu.EAX.getValue()) {
             
-            case 0:
-                m_cpu.EAX.setValue(1);          // Maximum input value for EAX
+            case 0x00000000:
+                m_cpu.EAX.setValue(0x00000001); // Maximum input value for EAX
                 m_cpu.EBX.setValue(0x756e6547); // Genu
                 m_cpu.EDX.setValue(0x49656e69); // ineI
                 m_cpu.ECX.setValue(0x6c65746e); // ntel
                 break;
             
             // Version information
-            case 1:
-                m_cpu.EAX.setValue(0x45b);
-                m_cpu.EBX.setValue(0);
-                m_cpu.EDX.setValue(1);
-                m_cpu.ECX.setValue(0);
+            case 0x00000001:
+                m_cpu.EAX.setValue(0x00000470); // i80486DX2WB
+                m_cpu.EBX.setValue(0x00000000);
+                m_cpu.EDX.setValue(0x00000001); // Supports FPU
+                m_cpu.ECX.setValue(0x00000000);
                 break;
                 
             default:
-                m_cpu.EAX.setValue(0);
+                System.out.printf("CPUID: Unknown reg %08X\n", m_cpu.EAX.getValue());
+                m_cpu.EAX.setValue(0x00000000);
                 break;
         }
     }
