@@ -311,6 +311,8 @@ public final class JPCWindow extends JFrame {
         m_menuBar.getEmulationMenu().setFullscreenEnabled(false);
         m_menuBar.getEmulationMenu().setScreenshotEnabled(false);
         
+        m_mouseGrabber.releaseMouse();
+        
         SwingDialogs.showExceptionMessage("jPC died", ex);
         ex.printStackTrace(System.err);
     }

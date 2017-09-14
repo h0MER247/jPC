@@ -162,6 +162,18 @@ public final class MouseGrabber {
     
     
     
+    public void releaseMouse() {
+        
+        if(m_isGrabbed) {
+            
+            m_component.setCursor(Cursor.getDefaultCursor());
+            m_isGrabbed = false;
+            
+            if(m_onMouseGrabbed != null)
+                m_onMouseGrabbed.run();
+        }
+    }
+    
     public boolean isMouseGrabbed() {
         
         return m_isGrabbed;
