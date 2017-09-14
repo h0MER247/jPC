@@ -39,6 +39,12 @@ public final class TsengET4000 extends VGAAdapter {
      * ----------------------------------------------------- */
     private int m_gdcSegmentOffset;
     
+    /* ----------------------------------------------------- *
+     * HiColor DAC                                           *
+     * ----------------------------------------------------- */
+    private int m_dacCounter;
+    private int m_dacControl;
+    
     
     
     public TsengET4000(GraphicsCardListener listener) {
@@ -79,6 +85,23 @@ public final class TsengET4000 extends VGAAdapter {
         
         switch(port) {
             
+            // HiColor DAC magic access sequence
+            case 0x3c6:
+                if(m_dacCounter == 4) {
+                    
+                    m_dacCounter = 0;
+                    return m_dacControl;
+                }
+                m_dacCounter++;
+                return super.readIO8(port);
+                
+            case 0x3c7:
+            case 0x3c8:
+            case 0x3c9:
+                m_dacCounter = 0;
+                return super.readIO8(port);
+                
+            // GDC segment offset
             case 0x3cd:
                 return m_gdcSegmentOffset;
                 
@@ -101,6 +124,25 @@ public final class TsengET4000 extends VGAAdapter {
     public void writeIO8(int port, int data) {
         
         switch(port) {
+            
+            // HiColor DAC magic access sequence
+            case 0x3c6:
+                if(m_dacCounter == 4) {
+                    
+                    m_dacControl = data;
+                    updateTimings();
+                }
+                else
+                    super.writeIO8(port, data);
+                m_dacCounter = 0;
+                break;
+                
+            case 0x3c7:
+            case 0x3c8:
+            case 0x3c9:
+                m_dacCounter = 0;
+                super.writeIO8(port, data);
+                break;
             
             case 0x3cd:
                 m_gdcSegmentOffset = data;
