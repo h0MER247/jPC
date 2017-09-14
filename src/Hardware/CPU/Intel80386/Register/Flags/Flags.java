@@ -164,7 +164,7 @@ public final class Flags {
     
     public int getValue() {
         
-        int flags = 0x00000002 | (IOPL << 12);
+        int flags = IOPL << 12;
         
         if(AC) flags |= MASK_ALIGN_CHECK;
         if(VM) flags |= MASK_VM_8086;
@@ -180,7 +180,7 @@ public final class Flags {
         if(PF) flags |= MASK_PARITY;
         if(CF) flags |= MASK_CARRY;
         
-        return flags & m_capabilityMask;
+        return 0x00000002 | (flags & m_capabilityMask);
     }
     
     
