@@ -91,7 +91,7 @@ public final class FileResource {
     
     public static void write(int[] src, File dst) throws IOException {
         
-        if(!dst.canWrite())
+        if(dst.exists() && !dst.canWrite())
             return;
         
         // Write file
