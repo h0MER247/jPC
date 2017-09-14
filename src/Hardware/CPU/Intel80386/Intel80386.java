@@ -203,7 +203,7 @@ public final class Intel80386 implements HardwareComponent,
         TR6.reset(); TR7.reset();
         
         if(m_cpuType == CPUType.i486)
-            DX.setValue(0x045b);
+            DX.setValue(0x470);
         
         // Reset segments
         CS.reset(); DS.reset(); ES.reset(); FS.reset();
@@ -923,7 +923,7 @@ public final class Intel80386 implements HardwareComponent,
     @Override
     public String toString() {
         
-        String gpr = String.format("EAX:%08x, EBX:%08x, ECX:%08x, EDX:%08x, ESP:%08x, EBP:%08x, ESI:%08x, EDI:%08x",
+        String gpr = String.format("EAX:%08x, EBX:%08x, ECX:%08x, EDX:%08x, ESP:%08x, EBP:%08x, ESI:%08x, EDI:%08x EIP:%08x",
                 
             EAX.getValue(),
             EBX.getValue(),
@@ -932,7 +932,8 @@ public final class Intel80386 implements HardwareComponent,
             ESP.getValue(),
             EBP.getValue(),
             ESI.getValue(),
-            EDI.getValue()
+            EDI.getValue(),
+            EIP.getValue()
         );
         
         String flags = "Flags:" + FLAGS.toString();
@@ -972,19 +973,23 @@ public final class Intel80386 implements HardwareComponent,
             TR.isBusy() ? "Yes" : "No"
         );
         
-        String special = String.format("CPL:%d, CR0:%08x, CR2:%08x, CR3:%08x",
+        String special = String.format("CPL:%d, CR0:%08x, CR2:%08x, CR3:%08x, Protected Mode: %b, Paging: %b",
                 
             getCPL(),
             CR.getCR0(),
             CR.getCR2(),
-            CR.getCR3()
+            CR.getCR3(),
+            CR.isInProtectedMode(),
+            CR.isPagingEnabled()
         );
+        
+        String fpu = FPU.toString();
         
         String block = m_currentBlock != null ? m_currentBlock.toString() : "No information";
         
         return "CPU State:\n" + gpr + "\n" + flags + "\n" + segCS + "\n" + segDS + "\n" + segES +
                "\n" + segFS + "\n" + segGS + "\n" + segSS + "\n" + gdt + "\n" + idt +
-               "\n" + ldt + "\n" + tr + "\n" + special + "\n\n" + "Dump of the current code block:\n" + block;
+               "\n" + ldt + "\n" + tr + "\n" + special + "\n" + fpu + "\n\n" + "Dump of the current code block:\n" + block;
     }
     
     // </editor-fold>
