@@ -628,16 +628,16 @@ public final class Intel80386 implements HardwareComponent,
     // </editor-fold>
     // <editor-fold defaultstate="collapsed" desc="Codeblock cache">
     
-    public void invalidateAddress(int address, int size) {
+    public void invalidateAddress(int addrStart, int offs) {
         
         // Everything about this is sooooo hacky... Find a way to do this
         // properly
         
-        if((address & ~ATSystemRAM.RAM_SIZE_MASK) == 0) {
+        if((addrStart & ~ATSystemRAM.RAM_SIZE_MASK) == 0) {
             
-            m_codeBlockCache[address >>> 12].isValid = false;
+            m_codeBlockCache[addrStart >>> 12].isValid = false;
             
-            if(m_currentBlock.isCoveringPhysicalAddress(address, address + size - 1))
+            if(m_currentBlock.isCoveringPhysicalAddress(addrStart, addrStart + offs))
                 m_currentBlock.invalidate();
         }
     }

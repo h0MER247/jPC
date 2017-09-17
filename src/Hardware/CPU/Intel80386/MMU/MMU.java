@@ -240,7 +240,7 @@ public final class MMU implements HardwareComponent {
     
     public int readMEM16(int address, boolean isUserAccess) {
         
-        if(((address & 0x01) == 0) || (((address ^ (address + 1)) & ~0xfff) == 0)) {
+        if((address & 0xfff) != 0xfff) {
         
             return m_memoryMap.readMEM16(getPhysicalAddress(address, READ_ACCESS, isUserAccess));
         }
@@ -253,7 +253,7 @@ public final class MMU implements HardwareComponent {
     
     public int readMEM32(int address, boolean isUserAccess) {
         
-        if(((address & 0x03) == 0) || (((address ^ (address + 3)) & ~0xfff) == 0)) {
+        if((address & 0xfff) < 0xffd) {
             
             return m_memoryMap.readMEM32(getPhysicalAddress(address, READ_ACCESS, isUserAccess));
         }
@@ -270,17 +270,17 @@ public final class MMU implements HardwareComponent {
         
         address = getPhysicalAddress(address, WRITE_ACCESS, isUserAccess);
         
-        m_cpu.invalidateAddress(address, 1);
+        m_cpu.invalidateAddress(address, 0);
         m_memoryMap.writeMEM8(address, data & 0xff);
     }
     
     public void writeMEM16(int address, int data, boolean isUserAccess) {
         
-        if(((address & 0x01) == 0) || (((address ^ (address + 1)) & ~0xfff) == 0)) {
+        if((address & 0xfff) != 0xfff) {
             
             address = getPhysicalAddress(address, WRITE_ACCESS, isUserAccess);
             
-            m_cpu.invalidateAddress(address, 2);
+            m_cpu.invalidateAddress(address, 1);
             m_memoryMap.writeMEM16(address, data & 0xffff);
         }
         else {
@@ -292,11 +292,11 @@ public final class MMU implements HardwareComponent {
     
     public void writeMEM32(int address, int data, boolean isUserAccess) {
         
-        if(((address & 0x03) == 0) || (((address ^ (address + 3)) & ~0xfff) == 0)) {
+        if((address & 0xfff) < 0xffd) {
             
             address = getPhysicalAddress(address, WRITE_ACCESS, isUserAccess);
             
-            m_cpu.invalidateAddress(address, 4);
+            m_cpu.invalidateAddress(address, 3);
             m_memoryMap.writeMEM32(address, data);
         }
         else {
