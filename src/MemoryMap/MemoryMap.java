@@ -60,10 +60,18 @@ public final class MemoryMap {
     /* ----------------------------------------------------- *
      * Memory mapping                                        *
      * ----------------------------------------------------- */
-    private final MemoryReadable[] m_read;
-    private final int[] m_readOffset;
-    private final MemoryWritable[] m_write;
-    private final int[] m_writeOffset;
+    private class ReadMapping {
+        
+        MemoryReadable mem;
+        int offset;
+    }
+    private class WriteMapping {
+        
+        MemoryWritable mem;
+        int offset;
+    }
+    private final ReadMapping[] m_read;
+    private final WriteMapping[] m_write;
     
     
     
@@ -77,10 +85,14 @@ public final class MemoryMap {
         
         m_devices = new HashMap<>();
         
-        m_read = new MemoryReadable[MAP_PAGE_COUNT];
-        m_readOffset = new int[MAP_PAGE_COUNT];
-        m_write = new MemoryWritable[MAP_PAGE_COUNT];
-        m_writeOffset = new int[MAP_PAGE_COUNT];
+        m_read = new ReadMapping[MAP_PAGE_COUNT];
+        for(int i = 0; i < MAP_PAGE_COUNT; i++)
+            m_read[i] = new ReadMapping();
+        
+        m_write = new WriteMapping[MAP_PAGE_COUNT];
+        for(int i = 0; i < MAP_PAGE_COUNT; i++)
+            m_write[i] = new WriteMapping();
+        
         m_unmapped = new UnmappedMemoryDevice();
     }
     
@@ -92,11 +104,10 @@ public final class MemoryMap {
         
         for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
-            m_read[i] = m_unmapped;
-            m_readOffset[i] = i << MAP_PAGE_BITS;
-            
-            m_write[i] = m_unmapped;
-            m_writeOffset[i] = i << MAP_PAGE_BITS;
+            m_read[i].mem = m_unmapped;
+            m_read[i].offset = i << MAP_PAGE_BITS;
+            m_write[i].mem = m_unmapped;
+            m_write[i].offset = i << MAP_PAGE_BITS;
         }
         
         m_devices.forEach((memDevice, delegate) -> {
@@ -140,18 +151,36 @@ public final class MemoryMap {
         
         for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
-            if(m_read[i] == memDevice) {
+            if(m_read[i].mem == memDevice) {
                 
-                m_read[i] = m_unmapped;
-                m_readOffset[i] = i << MAP_PAGE_BITS;
+                m_read[i].mem = m_unmapped;
+                m_read[i].offset = i << MAP_PAGE_BITS;
             }
         }
         
         int[][] mapping = memDevice.getReadableMemoryAddresses();
         if(mapping != null) {
             
-            for(int[] mappingInfo : mapping)
-                performMapping(memDevice, mappingInfo, m_read, m_readOffset);
+            for(int[] mappingInfo : mapping) {
+                
+                if(mappingInfo.length != 3)
+                    throw new IllegalArgumentException(String.format("The device '%s' specified illegal mapping data", memDevice));
+                
+                int startAddress = mappingInfo[0];
+                int size = mappingInfo[1];
+                int offset = mappingInfo[2];
+                
+                checkMappingInfo(memDevice, startAddress, size, offset);
+                
+                int pageStart = startAddress >>> MAP_PAGE_BITS;
+                int pageEnd = (startAddress + size) >>> MAP_PAGE_BITS;
+                
+                for(int i = pageStart; i < pageEnd; i++, offset += MAP_PAGE_SIZE) {
+            
+                    m_read[i].mem = memDevice;
+                    m_read[i].offset = offset;
+                }
+            }
         }
     }
     
@@ -159,49 +188,52 @@ public final class MemoryMap {
         
         for(int i = 0; i < MAP_PAGE_COUNT; i++) {
             
-            if(m_write[i] == memDevice) {
+            if(m_write[i].mem == memDevice) {
                 
-                m_write[i] = m_unmapped;
-                m_writeOffset[i] = i << MAP_PAGE_BITS;
+                m_write[i].mem = m_unmapped;
+                m_write[i].offset = i << MAP_PAGE_BITS;
             }
         }
         
         int[][] mapping = memDevice.getWritableMemoryAddresses();
         if(mapping != null) {
         
-            for(int[] mappingInfo : mapping)
-                performMapping(memDevice, mappingInfo, m_write, m_writeOffset);
+            for(int[] mappingInfo : mapping) {
+                
+                if(mappingInfo.length != 3)
+                    throw new IllegalArgumentException(String.format("The device '%s' specified illegal mapping data", memDevice));
+                
+                int startAddress = mappingInfo[0];
+                int size = mappingInfo[1];
+                int offset = mappingInfo[2];
+                
+                checkMappingInfo(memDevice, startAddress, size, offset);
+                
+                int pageStart = startAddress >>> MAP_PAGE_BITS;
+                int pageEnd = (startAddress + size) >>> MAP_PAGE_BITS;
+                
+                for(int i = pageStart; i < pageEnd; i++, offset += MAP_PAGE_SIZE) {
+            
+                    m_write[i].mem = memDevice;
+                    m_write[i].offset = offset;
+                }
+            }
         }
     }
     
-    private void performMapping(MemoryMapped memDevice, int[] mappingInfo, MemoryMapped[] dstMap, int[] dstOffset) {
-                
-        // Read and check mapping info
-        if(mappingInfo.length != 3)
-            throw new IllegalArgumentException(String.format("The device '%s' specified illegal mapping data", memDevice));
-        
-        int startAddress = mappingInfo[0];
-        int size = mappingInfo[1];
-        int offset = mappingInfo[2];
+    private void checkMappingInfo(MemoryMapped device, int startAddress, int size, int offset) {
         
         if((startAddress % MAP_PAGE_SIZE) != 0)
-            throw new IllegalArgumentException(String.format("The memory start address for device '%s' must be evenly divisible by the page size", memDevice));
-        if(((startAddress & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
-            throw new IllegalArgumentException(String.format("The memory start address for device '%s' is outside the address space", memDevice));
-        if((((startAddress + size - 1) & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
-            throw new IllegalArgumentException(String.format("The given memory range for device '%s' is outside the address space", memDevice));
-        if((size % MAP_PAGE_SIZE) != 0)
-            throw new IllegalArgumentException(String.format("The memory size of device '%s' must be evenly divisible by the page size", memDevice));
+            throw new IllegalArgumentException(String.format("The memory start address for device '%s' must be evenly divisible by the page size", device));
         
-        // Perform the actual mapping
-        int pageStart = startAddress >>> MAP_PAGE_BITS;
-        int pageEnd = (startAddress + size) >>> MAP_PAGE_BITS;
-                
-        for(int i = pageStart; i < pageEnd; i++, offset += MAP_PAGE_SIZE) {
-            
-            dstMap[i] = memDevice;
-            dstOffset[i] = offset;
-        }
+        if(((startAddress & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
+            throw new IllegalArgumentException(String.format("The memory start address for device '%s' is outside the address space", device));
+        
+        if((((startAddress + size - 1) & ~MAP_ADDR_MASK) != 0) && MAP_ADDR_MASK != 0xffffffff)
+            throw new IllegalArgumentException(String.format("The given memory range for device '%s' is outside the address space", device));
+        
+        if((size % MAP_PAGE_SIZE) != 0)
+            throw new IllegalArgumentException(String.format("The memory size of device '%s' must be evenly divisible by the page size", device));        
     }
     
     // </editor-fold>
@@ -211,54 +243,56 @@ public final class MemoryMap {
         
         address &= MAP_ADDR_MASK;
         
-        int page = address >>> MAP_PAGE_BITS;
+        ReadMapping r = m_read[address >>> MAP_PAGE_BITS];
         
-        return m_read[page].readMEM8(m_readOffset[page] + (address & MAP_PAGE_MASK));
-    }
-    
-    public void writeMEM8(int address, int data) {
-        
-        address &= MAP_ADDR_MASK;
-        
-        int page = address >>> MAP_PAGE_BITS;
-        
-        m_write[page].writeMEM8(m_readOffset[page] + (address & MAP_PAGE_MASK), data);
+        return r.mem.readMEM8(r.offset + (address & MAP_PAGE_MASK));
     }
     
     public int readMEM16(int address) {
             
         address &= MAP_ADDR_MASK;
         
-        int page = address >>> MAP_PAGE_BITS;
+        ReadMapping r = m_read[address >>> MAP_PAGE_BITS];
         
-        return m_read[page].readMEM16(m_readOffset[page] + (address & MAP_PAGE_MASK));
-    }
-    
-    public void writeMEM16(int address, int data) {
-        
-        address &= MAP_ADDR_MASK;
-        
-        int page = address >>> MAP_PAGE_BITS;
-        
-        m_write[page].writeMEM16(m_readOffset[page] + (address & MAP_PAGE_MASK), data);
+        return r.mem.readMEM16(r.offset + (address & MAP_PAGE_MASK));
     }
     
     public int readMEM32(int address) {
             
         address &= MAP_ADDR_MASK;
         
-        int page = address >>> MAP_PAGE_BITS;
+        ReadMapping r = m_read[address >>> MAP_PAGE_BITS];
         
-        return m_read[page].readMEM32(m_readOffset[page] + (address & MAP_PAGE_MASK));
+        return r.mem.readMEM32(r.offset + (address & MAP_PAGE_MASK));
+    }
+    
+    
+    
+    public void writeMEM8(int address, int data) {
+        
+        address &= MAP_ADDR_MASK;
+        
+        WriteMapping w = m_write[address >>> MAP_PAGE_BITS];
+        
+        w.mem.writeMEM8(w.offset + (address & MAP_PAGE_MASK), data);
+    }
+    
+    public void writeMEM16(int address, int data) {
+        
+        address &= MAP_ADDR_MASK;
+        
+        WriteMapping w = m_write[address >>> MAP_PAGE_BITS];
+        
+        w.mem.writeMEM16(w.offset + (address & MAP_PAGE_MASK), data);
     }
     
     public void writeMEM32(int address, int data) {
         
         address &= MAP_ADDR_MASK;
         
-        int page = address >>> MAP_PAGE_BITS;
+        WriteMapping w = m_write[address >>> MAP_PAGE_BITS];
         
-        m_write[page].writeMEM32(m_readOffset[page] + (address & MAP_PAGE_MASK), data);
+        w.mem.writeMEM32(w.offset + (address & MAP_PAGE_MASK), data);
     }
     
     // </editor-fold>
