@@ -19,6 +19,7 @@ package Hardware.CPU.Intel80386.Register.FPU;
 
 import Hardware.CPU.Intel80386.Exceptions.CPUException;
 import Hardware.CPU.Intel80386.Intel80386;
+import Utility.MathHelper;
 import java.util.Arrays;
 
 
@@ -130,20 +131,14 @@ public final class FPURegisters {
         }
     }
     
-    
-    
-    private boolean isQuietNaN(double value) {
-        
-        return (Double.doubleToRawLongBits(value) & 0x01l) == 0l;
-    }
-    
     public void compareUnorderedWithST0(double src) {
         
         double st0 = getST0();
         
         if(Double.isNaN(st0) || Double.isNaN(src)) {
             
-            if(isQuietNaN(st0) && isQuietNaN(src)) {
+            if(MathHelper.isQuietNaN(st0) &&
+               MathHelper.isQuietNaN(src)) {
                 
                 m_status |= STATUS_CC_C0 | STATUS_CC_C2 | STATUS_CC_C3;
             }
@@ -166,11 +161,6 @@ public final class FPURegisters {
         }
     }
     
-    public void generateZeroDivisionException() {
-        
-        setException(STATUS_EX_ZERO_DIVIDE);
-    }
-    
     
     
     public void clearExceptions() {
@@ -189,10 +179,15 @@ public final class FPURegisters {
             if(m_cpu.CR.isNumericErrorEnabled())
                 throw CPUException.getCoprocessorError();
             
-            return true;
+            return false;
         }
         
-        return false;
+        return true;
+    }
+    
+    public boolean generateZeroDivisionException() {
+        
+        return setException(STATUS_EX_ZERO_DIVIDE);
     }
     
     
@@ -246,10 +241,10 @@ public final class FPURegisters {
         
         switch(m_control & CTRL_RM_MASK) {
             
-            case CTRL_RM_NEAREST: return Math.rint(value);
-            case CTRL_RM_ROUND_DOWN: return Math.floor(value);
-            case CTRL_RM_ROUND_UP: return Math.ceil(value);
-            case CTRL_RM_TRUNCATE: return Math.floor(Math.abs(value)) * Math.signum(value);
+            case CTRL_RM_NEAREST: return MathHelper.roundToNearestEven(value);
+            case CTRL_RM_ROUND_DOWN: return MathHelper.roundToNegativeInfinity(value);
+            case CTRL_RM_ROUND_UP: return MathHelper.roundToPositiveInfinity(value);
+            case CTRL_RM_TRUNCATE: return MathHelper.roundToZero(value);
             
             default:
                 throw new IllegalArgumentException("Invalid rounding mode");
@@ -268,6 +263,40 @@ public final class FPURegisters {
         
         m_status = status;
     }
+    
+    public void setC0(boolean value) {
+        
+        if(value)
+            m_status |= STATUS_CC_C0;
+        else
+            m_status &= ~STATUS_CC_C0;
+    }
+    
+    public void setC1(boolean value) {
+        
+        if(value)
+            m_status |= STATUS_CC_C1;
+        else
+            m_status &= ~STATUS_CC_C1;
+    }
+    
+    public void setC2(boolean value) {
+        
+        if(value)
+            m_status |= STATUS_CC_C2;
+        else
+            m_status &= ~STATUS_CC_C2;
+    }
+    
+    public void setC3(boolean value) {
+        
+        if(value)
+            m_status |= STATUS_CC_C3;
+        else
+            m_status &= ~STATUS_CC_C3;
+    }
+    
+    
     
     public int getStatus() {
     

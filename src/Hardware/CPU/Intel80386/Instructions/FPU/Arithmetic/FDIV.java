@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,10 +47,15 @@ public final class FDIV extends Instruction {
         double arg1 = m_arg1.getValue();
         double arg2 = m_arg2.getValue();
         
-        if(arg2 == 0.0)
-            m_cpu.FPU.generateZeroDivisionException();
+        if(arg2 == 0.0) {
+            
+            if(m_cpu.FPU.generateZeroDivisionException())
+                m_destination.setValue(arg1 / arg2);
+        }
+        else {
         
-        m_destination.setValue(arg1 / arg2);
+            m_destination.setValue(arg1 / arg2);
+        }
     }
     
     @Override

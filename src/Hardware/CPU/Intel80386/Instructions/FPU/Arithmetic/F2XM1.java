@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,10 +32,15 @@ public final class F2XM1 extends Instruction {
     @Override
     public void run() {
         
-        m_cpu.FPU.setST0(
-                
-            Math.pow(2.0, m_cpu.FPU.getST0()) - 1.0
-        );
+        double st0 = m_cpu.FPU.getST0();
+        
+        if(st0 != -0.0 && st0 != 0.0) {
+            
+            m_cpu.FPU.setST0(
+
+                Math.pow(2.0, st0) - 1.0
+            );
+        }
     }
     
     @Override

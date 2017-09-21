@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@ package Hardware.CPU.Intel80386.Instructions.FPU.Misc;
 
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
-import Hardware.CPU.Intel80386.Register.FPU.FPURegisters;
+import Utility.MathHelper;
 
 
 
@@ -33,35 +33,59 @@ public final class FXAM extends Instruction {
     @Override
     public void run() {
         
-        m_cpu.FPU.clearConditions();
+        double st0 = m_cpu.FPU.getST0();
         
         // Set C1 depending on ST0's sign
-        double value = m_cpu.FPU.getST0();
-        if(value < 0.0)
-            m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C1);
+        m_cpu.FPU.setC1(st0 < 0.0);
         
-        // Set C3, C0 if register is empty
+        // Empty
         if(m_cpu.FPU.isRegisterEmpty(0)) {
             
-            m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C3 | FPURegisters.STATUS_CC_C0);
+            m_cpu.FPU.setC3(true);
+            m_cpu.FPU.setC2(false);
+            m_cpu.FPU.setC0(true);
         }
+        // Zero
+        else if(st0 == 0.0) {
+            
+            m_cpu.FPU.setC3(true);
+            m_cpu.FPU.setC2(false);
+            m_cpu.FPU.setC0(false);
+        }
+        // Normal finite number
+        else if(Double.isFinite(st0)) {
+            
+            m_cpu.FPU.setC3(false);
+            m_cpu.FPU.setC2(true);
+            m_cpu.FPU.setC0(false);
+        }
+        // NaN
+        else if(Double.isNaN(st0)) {
+            
+            m_cpu.FPU.setC3(false);
+            m_cpu.FPU.setC2(false);
+            m_cpu.FPU.setC0(true);
+        }
+        // Infinity
+        else if(Double.isInfinite(st0)) {
+            
+            m_cpu.FPU.setC3(false);
+            m_cpu.FPU.setC2(true);
+            m_cpu.FPU.setC0(true);
+        }
+        // Denormal number
+        else if(MathHelper.isDenormal(st0)) {
+            
+            m_cpu.FPU.setC3(true);
+            m_cpu.FPU.setC2(true);
+            m_cpu.FPU.setC0(false);
+        }
+        // Unsupported
         else {
             
-            // Set C2 if register contains a valid finite number
-            if(Double.isFinite(value))
-                m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C2);
-            
-            // Set C3 if register contains zero
-            else if(value == 0.0)
-                m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C3);
-            
-            // Set C2, C0 if register contains infinity
-            else if(Double.isInfinite(value))
-                m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C2 | FPURegisters.STATUS_CC_C0);
-        
-            // Set C0 if register contains NaN
-            else if(Double.isNaN(value))
-                m_cpu.FPU.setConditions(FPURegisters.STATUS_CC_C0);
+            m_cpu.FPU.setC3(false);
+            m_cpu.FPU.setC2(false);
+            m_cpu.FPU.setC0(false);
         }
     }
     

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,6 +19,7 @@ package Hardware.CPU.Intel80386.Instructions.FPU.Arithmetic;
 
 import Hardware.CPU.Intel80386.Instructions.Instruction;
 import Hardware.CPU.Intel80386.Intel80386;
+import Utility.MathHelper;
 
 
 
@@ -34,7 +35,7 @@ public final class FSCALE extends Instruction {
         
         m_cpu.FPU.setST0(
                 
-            Math.scalb(m_cpu.FPU.getST0(), (int)m_cpu.FPU.getST1())
+            m_cpu.FPU.getST0() * Math.pow(2.0, MathHelper.roundToZero(m_cpu.FPU.getST1()))
         );
     }
     
