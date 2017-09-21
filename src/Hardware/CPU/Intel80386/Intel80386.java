@@ -442,6 +442,10 @@ public final class Intel80386 implements HardwareComponent,
                     throw CPUException.getGeneralProtectionFault(0);
                 
                 
+                if(!descCS.isSize32())
+                    ip &= 0xffff;
+                
+                
                 //
                 // Trap or Interrupt Gate: Inner privilege
                 //
