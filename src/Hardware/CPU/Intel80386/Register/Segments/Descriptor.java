@@ -103,7 +103,11 @@ public final class Descriptor {
         if(m_typeInfo.isGate()) {
             
             m_targetSegment = (lowWord >>> 16) & 0xffff;
-            m_targetOffset = (highWord & 0xffff0000) | (lowWord & 0xffff);
+            m_targetOffset = lowWord & 0xffff;
+            
+            if(m_typeInfo.is32BitGate())
+                m_targetOffset |= (highWord & 0xffff0000);
+                    
             m_parameterCount = highWord & 0x1f;
         }
     }

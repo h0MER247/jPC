@@ -226,12 +226,9 @@ public final class CALL_FAR extends Instruction {
             throw CPUException.getGeneralProtectionFault(gateSelector & 0xfffc);
         
         
-        // Get cs from gate descriptor
+        // Get cs:ip from gate descriptor
         int cs = descGate.getTargetSegment();
         int ip = descGate.getTargetOffset();
-        
-        if(!m_is32)
-            ip &= 0xffff;
         
         
         // CS selector must be non null
@@ -298,9 +295,11 @@ public final class CALL_FAR extends Instruction {
         
         // New stack must have enough room for the long pointer to the current
         // stack and return address as well as the parameters
+        boolean is32BitGate = descGate.getTypeInfo().is32BitGate();
+        
         int numParams = descGate.getParameterCount();
         int neededSpace;
-        if(m_is32)
+        if(is32BitGate)
             neededSpace = 8 + (numParams << 1);
         else
             neededSpace = 16 + (numParams << 2);
@@ -325,7 +324,7 @@ public final class CALL_FAR extends Instruction {
         int[] param = new int[numParams];
         for(int i = numParams - 1, j = 0; i >= 0; i--, j++) {
             
-            if(m_is32)
+            if(is32BitGate)
                 param[j] = m_cpu.readMEM32(m_cpu.SS, oldSP + (i * 4));
             else
                 param[j] = m_cpu.readMEM16(m_cpu.SS, (oldSP + (i * 2)) & 0xffff);
@@ -345,7 +344,7 @@ public final class CALL_FAR extends Instruction {
         
         
         // Push return information and parameters to the new stack
-        if(m_is32) {
+        if(is32BitGate) {
         
             m_cpu.pushStack32(oldSS);
             m_cpu.pushStack32(oldSP);
