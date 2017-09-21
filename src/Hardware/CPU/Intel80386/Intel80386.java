@@ -267,6 +267,7 @@ public final class Intel80386 implements HardwareComponent,
                .option("40 MHz", "40000000")
                .option("50 MHz", "50000000")
                .option("60 MHz", "60000000")
+               .option("66 MHz", "66000000")
                .option("75 MHz", "75000000")
                .build();
     }
