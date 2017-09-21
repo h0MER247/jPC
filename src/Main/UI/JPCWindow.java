@@ -289,6 +289,8 @@ public final class JPCWindow extends JFrame {
         else
             m_system.stop();
         
+        m_mouseGrabber.setEnable(isRunning);
+        
         m_menuBar.getEmulationMenu().setSystemEnabled(!isRunning);
         m_menuBar.getEmulationMenu().setPauseSelected(false);
         m_menuBar.getEmulationMenu().setPauseEnabled(isRunning);
@@ -311,7 +313,7 @@ public final class JPCWindow extends JFrame {
         m_menuBar.getEmulationMenu().setFullscreenEnabled(false);
         m_menuBar.getEmulationMenu().setScreenshotEnabled(false);
         
-        m_mouseGrabber.releaseMouse();
+        m_mouseGrabber.setEnable(false);
         
         SwingDialogs.showExceptionMessage("jPC died", ex);
         ex.printStackTrace(System.err);

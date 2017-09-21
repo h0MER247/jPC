@@ -45,6 +45,7 @@ public final class MouseGrabber {
     private MouseAdapter m_handler;
     private Cursor m_invisibleCursor;
     private boolean m_isGrabbed;
+    private boolean m_isEnabled;
     private int m_posX;
     private int m_posY;
     
@@ -55,6 +56,8 @@ public final class MouseGrabber {
         
         m_component = component;
         m_onMouseGrabbed = onMouseGrabbed;
+        m_isEnabled = false;
+        m_isGrabbed = false;
         
         try {
             
@@ -81,6 +84,8 @@ public final class MouseGrabber {
             m_component.addMouseMotionListener(m_handler);
         }
         catch(AWTException ex) {
+            
+            System.err.println("Mouse grabbing will not be possible");
         }
     }
     
@@ -88,33 +93,18 @@ public final class MouseGrabber {
     
     private void onPress(MouseEvent me) {
         
-        if(m_robot == null)
-            return;
-           
         if(me.getClickCount() >= 2) {
             
             if(SwingUtilities.isLeftMouseButton(me) && !m_isGrabbed) {
                 
-                m_isGrabbed = true;
+                grabMouse(true);
                 me.consume();
             }
             else if(SwingUtilities.isRightMouseButton(me) && m_isGrabbed) {
                 
-                m_isGrabbed = false;
+                grabMouse(false);
                 me.consume();
             }
-            else {
-                
-                return;
-            }
-
-            if(m_isGrabbed)
-                m_component.setCursor(m_invisibleCursor);
-            else
-                m_component.setCursor(Cursor.getDefaultCursor());
-
-            if(m_onMouseGrabbed != null)
-                m_onMouseGrabbed.run();
         }
     }
     
@@ -162,12 +152,27 @@ public final class MouseGrabber {
     
     
     
-    public void releaseMouse() {
+    public void setEnable(boolean isEnabled) {
         
-        if(m_isGrabbed) {
+        if(m_robot == null)
+            isEnabled = false;
+        
+        if(!isEnabled)
+            grabMouse(false);
+        
+        m_isEnabled = isEnabled;
+    }
+    
+    private void grabMouse(boolean isGrabbed) {
+        
+        if(m_isEnabled && m_isGrabbed != isGrabbed) {
             
-            m_component.setCursor(Cursor.getDefaultCursor());
-            m_isGrabbed = false;
+            m_isGrabbed = isGrabbed;
+            
+            if(isGrabbed)
+                m_component.setCursor(m_invisibleCursor);
+            else
+                m_component.setCursor(Cursor.getDefaultCursor());
             
             if(m_onMouseGrabbed != null)
                 m_onMouseGrabbed.run();
