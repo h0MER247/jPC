@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 homer
+ * Copyright (C) 2017 h0MER247
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
