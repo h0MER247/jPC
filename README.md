@@ -1,19 +1,19 @@
 # jPC - A PC Emulator written in Java
 
 ### Features
- - Emulation of the i8086 and i386 CPU (i486 is in development)
+ - Emulation of the i8086, i386 and i486 CPU (i486 still work in progress)
  - Basic IDE and VGA emulation (no CD-ROM atm)
  - PC Speaker output
  - Serial and PS/2 Mouse emulation
- - ... and yes, it boots Windows 95 :)
+ - ... and yes, it boots Windows 95/98 :)
  
 ### Screenshots
 <p align="center">
   <img src="https://user-images.githubusercontent.com/5739639/29886279-d446ef74-8db9-11e7-8898-f01c0b6f9e45.png" width="18%" alt="Booting Windows 95" title="Booting Windows 95" />
   <img src="https://user-images.githubusercontent.com/5739639/29920766-51c00fe0-8e4f-11e7-9757-f0de031a7524.png" width="18%" alt="Windows 95 Desktop" title="Windows 95 Desktop" />
-  <img src="https://user-images.githubusercontent.com/5739639/29920768-51c42d8c-8e4f-11e7-9764-d43cce7391ac.png" width="18%" alt="Defrag" title="Defrag" />
-  <img src="https://user-images.githubusercontent.com/5739639/29886281-d44abaa0-8db9-11e7-8204-43b8c094fd67.png" width="18%" alt="Solitaire" title="Solitaire" />
-  <img src="https://user-images.githubusercontent.com/5739639/29919790-0c60c092-8e4b-11e7-9808-debfba897f21.png" width="18%" alt="Baryon" title="Baryon" />
+  <img src="https://user-images.githubusercontent.com/5739639/30705632-403943d8-9ef6-11e7-96c5-c3bb0eee3f5f.png" width="18%" alt="Booting Windows 98" title="Booting Windows 98" />
+  <img src="https://user-images.githubusercontent.com/5739639/30705642-49227730-9ef6-11e7-8b23-f7a5c8774c27.png" width="18%" alt="Windows 98 Desktop" title="Windows 98 Desktop" />
+  <img src="https://user-images.githubusercontent.com/5739639/30706109-aaab38d8-9ef7-11e7-86cd-2cadc710d8f1.png" width="18%" alt="Unreal Tournament at 1 FPS in Software Rendering mode :)" title="Unreal Tournament at 1 FPS in Software Rendering mode :)" />
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408234/7fabac70-409d-11e7-8b2a-1dd769338413.png" width="18%" alt="Commander Keen 1" title="Commander Keen 1" />
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408219/7f2c130c-409d-11e7-9ed3-cc057ebad622.png" width="18%" alt="Commander Keen 4" title="Commander Keen 4" />
   <img src="https://cloud.githubusercontent.com/assets/5739639/26408228/7f77f65a-409d-11e7-92ff-782b36b17b90.png" width="18%" alt="Commander Keen Dreams" title="Commander Keen Dreams" />
